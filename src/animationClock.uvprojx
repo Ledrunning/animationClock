@@ -1,0 +1,1142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="project_projx.xsd">
+
+  <SchemaVersion>2.1</SchemaVersion>
+
+  <Header>### uVision Project, (C) Keil Software</Header>
+
+  <Targets>
+    <Target>
+      <TargetName>STM32F103 Flash</TargetName>
+      <ToolsetNumber>0x4</ToolsetNumber>
+      <ToolsetName>ARM-ADS</ToolsetName>
+      <pCCUsed>5060960::V5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
+      <uAC6>0</uAC6>
+      <TargetOption>
+        <TargetCommonOption>
+          <Device>STM32F103C8</Device>
+          <Vendor>STMicroelectronics</Vendor>
+          <PackID>Keil.STM32F1xx_DFP.2.4.0</PackID>
+          <PackURL>http://www.keil.com/pack/</PackURL>
+          <Cpu>IRAM(0x20000000,0x00005000) IROM(0x08000000,0x00010000) CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE</Cpu>
+          <FlashUtilSpec></FlashUtilSpec>
+          <StartupFile></StartupFile>
+          <FlashDriverDll>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32F10x_128 -FS08000000 -FL020000 -FP0($$Device:STM32F103C8$Flash\STM32F10x_128.FLM))</FlashDriverDll>
+          <DeviceId>0</DeviceId>
+          <RegisterFile>$$Device:STM32F103C8$Device\Include\stm32f10x.h</RegisterFile>
+          <MemoryEnv></MemoryEnv>
+          <Cmp></Cmp>
+          <Asm></Asm>
+          <Linker></Linker>
+          <OHString></OHString>
+          <InfinionOptionDll></InfinionOptionDll>
+          <SLE66CMisc></SLE66CMisc>
+          <SLE66AMisc></SLE66AMisc>
+          <SLE66LinkerMisc></SLE66LinkerMisc>
+          <SFDFile>$$Device:STM32F103C8$SVD\STM32F103xx.svd</SFDFile>
+          <bCustSvd>0</bCustSvd>
+          <UseEnv>0</UseEnv>
+          <BinPath></BinPath>
+          <IncludePath></IncludePath>
+          <LibPath></LibPath>
+          <RegisterFilePath></RegisterFilePath>
+          <DBRegisterFilePath></DBRegisterFilePath>
+          <TargetStatus>
+            <Error>0</Error>
+            <ExitCodeStop>0</ExitCodeStop>
+            <ButtonStop>0</ButtonStop>
+            <NotGenerated>0</NotGenerated>
+            <InvalidFlash>1</InvalidFlash>
+          </TargetStatus>
+          <OutputDirectory>.\Output\</OutputDirectory>
+          <OutputName>clock_scheme2_0_13</OutputName>
+          <CreateExecutable>1</CreateExecutable>
+          <CreateLib>0</CreateLib>
+          <CreateHexFile>1</CreateHexFile>
+          <DebugInformation>1</DebugInformation>
+          <BrowseInformation>1</BrowseInformation>
+          <ListingPath>.\Output\</ListingPath>
+          <HexFormatSelection>1</HexFormatSelection>
+          <Merge32K>0</Merge32K>
+          <CreateBatchFile>0</CreateBatchFile>
+          <BeforeCompile>
+            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg2>0</RunUserProg2>
+            <UserProg1Name></UserProg1Name>
+            <UserProg2Name></UserProg2Name>
+            <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
+            <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
+            <nStopU1X>0</nStopU1X>
+            <nStopU2X>0</nStopU2X>
+          </BeforeCompile>
+          <BeforeMake>
+            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg2>0</RunUserProg2>
+            <UserProg1Name></UserProg1Name>
+            <UserProg2Name></UserProg2Name>
+            <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
+            <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
+            <nStopB1X>0</nStopB1X>
+            <nStopB2X>0</nStopB2X>
+          </BeforeMake>
+          <AfterMake>
+            <RunUserProg1>0</RunUserProg1>
+            <RunUserProg2>0</RunUserProg2>
+            <UserProg1Name></UserProg1Name>
+            <UserProg2Name></UserProg2Name>
+            <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
+            <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
+            <nStopA1X>0</nStopA1X>
+            <nStopA2X>0</nStopA2X>
+          </AfterMake>
+          <SelectedForBatchBuild>0</SelectedForBatchBuild>
+          <SVCSIdString></SVCSIdString>
+        </TargetCommonOption>
+        <CommonProperty>
+          <UseCPPCompiler>0</UseCPPCompiler>
+          <RVCTCodeConst>0</RVCTCodeConst>
+          <RVCTZI>0</RVCTZI>
+          <RVCTOtherData>0</RVCTOtherData>
+          <ModuleSelection>0</ModuleSelection>
+          <IncludeInBuild>1</IncludeInBuild>
+          <AlwaysBuild>0</AlwaysBuild>
+          <GenerateAssemblyFile>0</GenerateAssemblyFile>
+          <AssembleAssemblyFile>0</AssembleAssemblyFile>
+          <PublicsOnly>0</PublicsOnly>
+          <StopOnExitCode>3</StopOnExitCode>
+          <CustomArgument></CustomArgument>
+          <IncludeLibraryModules></IncludeLibraryModules>
+          <ComprImg>1</ComprImg>
+        </CommonProperty>
+        <DllOption>
+          <SimDllName>SARMCM3.DLL</SimDllName>
+          <SimDllArguments> -REMAP</SimDllArguments>
+          <SimDlgDll>DCM.DLL</SimDlgDll>
+          <SimDlgDllArguments>-pCM3</SimDlgDllArguments>
+          <TargetDllName>SARMCM3.DLL</TargetDllName>
+          <TargetDllArguments></TargetDllArguments>
+          <TargetDlgDll>TCM.DLL</TargetDlgDll>
+          <TargetDlgDllArguments>-pCM3</TargetDlgDllArguments>
+        </DllOption>
+        <DebugOption>
+          <OPTHX>
+            <HexSelection>1</HexSelection>
+            <HexRangeLowAddress>0</HexRangeLowAddress>
+            <HexRangeHighAddress>0</HexRangeHighAddress>
+            <HexOffset>0</HexOffset>
+            <Oh166RecLen>16</Oh166RecLen>
+          </OPTHX>
+        </DebugOption>
+        <Utilities>
+          <Flash1>
+            <UseTargetDll>1</UseTargetDll>
+            <UseExternalTool>0</UseExternalTool>
+            <RunIndependent>0</RunIndependent>
+            <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
+            <Capability>1</Capability>
+            <DriverSelection>4096</DriverSelection>
+          </Flash1>
+          <bUseTDR>1</bUseTDR>
+          <Flash2>BIN\UL2CM3.DLL</Flash2>
+          <Flash3>"" ()</Flash3>
+          <Flash4></Flash4>
+          <pFcarmOut></pFcarmOut>
+          <pFcarmGrp></pFcarmGrp>
+          <pFcArmRoot></pFcArmRoot>
+          <FcArmLst>0</FcArmLst>
+        </Utilities>
+        <TargetArmAds>
+          <ArmAdsMisc>
+            <GenerateListings>0</GenerateListings>
+            <asHll>1</asHll>
+            <asAsm>1</asAsm>
+            <asMacX>1</asMacX>
+            <asSyms>1</asSyms>
+            <asFals>1</asFals>
+            <asDbgD>1</asDbgD>
+            <asForm>1</asForm>
+            <ldLst>0</ldLst>
+            <ldmm>1</ldmm>
+            <ldXref>1</ldXref>
+            <BigEnd>0</BigEnd>
+            <AdsALst>0</AdsALst>
+            <AdsACrf>1</AdsACrf>
+            <AdsANop>0</AdsANop>
+            <AdsANot>0</AdsANot>
+            <AdsLLst>1</AdsLLst>
+            <AdsLmap>1</AdsLmap>
+            <AdsLcgr>0</AdsLcgr>
+            <AdsLsym>0</AdsLsym>
+            <AdsLszi>0</AdsLszi>
+            <AdsLtoi>1</AdsLtoi>
+            <AdsLsun>0</AdsLsun>
+            <AdsLven>0</AdsLven>
+            <AdsLsxf>0</AdsLsxf>
+            <RvctClst>0</RvctClst>
+            <GenPPlst>0</GenPPlst>
+            <AdsCpuType>"Cortex-M3"</AdsCpuType>
+            <RvctDeviceName></RvctDeviceName>
+            <mOS>0</mOS>
+            <uocRom>0</uocRom>
+            <uocRam>0</uocRam>
+            <hadIROM>1</hadIROM>
+            <hadIRAM>1</hadIRAM>
+            <hadXRAM>0</hadXRAM>
+            <uocXRam>0</uocXRam>
+            <RvdsVP>0</RvdsVP>
+            <RvdsMve>0</RvdsMve>
+            <RvdsCdeCp>0</RvdsCdeCp>
+            <hadIRAM2>0</hadIRAM2>
+            <hadIROM2>0</hadIROM2>
+            <StupSel>8</StupSel>
+            <useUlib>0</useUlib>
+            <EndSel>0</EndSel>
+            <uLtcg>0</uLtcg>
+            <nSecure>0</nSecure>
+            <RoSelD>3</RoSelD>
+            <RwSelD>3</RwSelD>
+            <CodeSel>0</CodeSel>
+            <OptFeed>0</OptFeed>
+            <NoZi1>0</NoZi1>
+            <NoZi2>0</NoZi2>
+            <NoZi3>0</NoZi3>
+            <NoZi4>0</NoZi4>
+            <NoZi5>0</NoZi5>
+            <Ro1Chk>0</Ro1Chk>
+            <Ro2Chk>0</Ro2Chk>
+            <Ro3Chk>0</Ro3Chk>
+            <Ir1Chk>1</Ir1Chk>
+            <Ir2Chk>0</Ir2Chk>
+            <Ra1Chk>0</Ra1Chk>
+            <Ra2Chk>0</Ra2Chk>
+            <Ra3Chk>0</Ra3Chk>
+            <Im1Chk>1</Im1Chk>
+            <Im2Chk>0</Im2Chk>
+            <OnChipMemories>
+              <Ocm1>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </Ocm1>
+              <Ocm2>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </Ocm2>
+              <Ocm3>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </Ocm3>
+              <Ocm4>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </Ocm4>
+              <Ocm5>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </Ocm5>
+              <Ocm6>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </Ocm6>
+              <IRAM>
+                <Type>0</Type>
+                <StartAddress>0x20000000</StartAddress>
+                <Size>0x5000</Size>
+              </IRAM>
+              <IROM>
+                <Type>1</Type>
+                <StartAddress>0x8000000</StartAddress>
+                <Size>0x10000</Size>
+              </IROM>
+              <XRAM>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </XRAM>
+              <OCR_RVCT1>
+                <Type>1</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT1>
+              <OCR_RVCT2>
+                <Type>1</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT2>
+              <OCR_RVCT3>
+                <Type>1</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT3>
+              <OCR_RVCT4>
+                <Type>1</Type>
+                <StartAddress>0x8000000</StartAddress>
+                <Size>0x10000</Size>
+              </OCR_RVCT4>
+              <OCR_RVCT5>
+                <Type>1</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT5>
+              <OCR_RVCT6>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT6>
+              <OCR_RVCT7>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT7>
+              <OCR_RVCT8>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT8>
+              <OCR_RVCT9>
+                <Type>0</Type>
+                <StartAddress>0x20000000</StartAddress>
+                <Size>0x5000</Size>
+              </OCR_RVCT9>
+              <OCR_RVCT10>
+                <Type>0</Type>
+                <StartAddress>0x0</StartAddress>
+                <Size>0x0</Size>
+              </OCR_RVCT10>
+            </OnChipMemories>
+            <RvctStartVector></RvctStartVector>
+          </ArmAdsMisc>
+          <Cads>
+            <interw>1</interw>
+            <Optim>4</Optim>
+            <oTime>1</oTime>
+            <SplitLS>0</SplitLS>
+            <OneElfS>0</OneElfS>
+            <Strict>0</Strict>
+            <EnumInt>0</EnumInt>
+            <PlainCh>0</PlainCh>
+            <Ropi>0</Ropi>
+            <Rwpi>0</Rwpi>
+            <wLevel>1</wLevel>
+            <uThumb>0</uThumb>
+            <uSurpInc>0</uSurpInc>
+            <uC99>1</uC99>
+            <uGnu>0</uGnu>
+            <useXO>0</useXO>
+            <v6Lang>1</v6Lang>
+            <v6LangP>1</v6LangP>
+            <vShortEn>1</vShortEn>
+            <vShortWch>1</vShortWch>
+            <v6Lto>0</v6Lto>
+            <v6WtE>0</v6WtE>
+            <v6Rtti>0</v6Rtti>
+            <VariousControls>
+              <MiscControls></MiscControls>
+              <Define>USE_GRAPHICS_VIRTUAL_BUFFER, USE_GRAPHICS_FORMAT_RGB_565, USE_GRAPHICS_FORMAT_BW_1_V</Define>
+              <Undefine></Undefine>
+              <IncludePath>.\mane;.\i2cm;.\AM2320;.\hdc1080;.\LIB\ds18x20;.\LIB\one_wire;.\WEB;.\USART;.\LIB;.\BMP280</IncludePath>
+            </VariousControls>
+          </Cads>
+          <Aads>
+            <interw>1</interw>
+            <Ropi>0</Ropi>
+            <Rwpi>0</Rwpi>
+            <thumb>0</thumb>
+            <SplitLS>0</SplitLS>
+            <SwStkChk>0</SwStkChk>
+            <NoWarn>0</NoWarn>
+            <uSurpInc>0</uSurpInc>
+            <useXO>0</useXO>
+            <ClangAsOpt>4</ClangAsOpt>
+            <VariousControls>
+              <MiscControls></MiscControls>
+              <Define></Define>
+              <Undefine></Undefine>
+              <IncludePath></IncludePath>
+            </VariousControls>
+          </Aads>
+          <LDads>
+            <umfTarg>1</umfTarg>
+            <Ropi>0</Ropi>
+            <Rwpi>0</Rwpi>
+            <noStLib>0</noStLib>
+            <RepFail>1</RepFail>
+            <useFile>0</useFile>
+            <TextAddressRange>0x08000000</TextAddressRange>
+            <DataAddressRange>0x20000000</DataAddressRange>
+            <pXoBase></pXoBase>
+            <ScatterFile></ScatterFile>
+            <IncludeLibs></IncludeLibs>
+            <IncludeLibsPath></IncludeLibsPath>
+            <Misc></Misc>
+            <LinkerInputFile></LinkerInputFile>
+            <DisabledWarnings></DisabledWarnings>
+          </LDads>
+        </TargetArmAds>
+      </TargetOption>
+      <Groups>
+        <Group>
+          <GroupName>mane</GroupName>
+          <Files>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\mane\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>clock_gui.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\mane\clock_gui.c</FilePath>
+            </File>
+            <File>
+              <FileName>clock_gui.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\mane\clock_gui.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>utils</GroupName>
+          <Files>
+            <File>
+              <FileName>delay.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\utils\delay.h</FilePath>
+            </File>
+            <File>
+              <FileName>delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\utils\delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>utils.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\utils\utils.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>tft</GroupName>
+          <Files>
+            <File>
+              <FileName>tft9341.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\tft9341\tft9341.c</FilePath>
+            </File>
+            <File>
+              <FileName>tft9341_cache.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\tft9341\tft9341_cache.c</FilePath>
+            </File>
+            <File>
+              <FileName>tft9341.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\tft9341\tft9341.h</FilePath>
+            </File>
+            <File>
+              <FileName>tft9341_cache.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\tft9341\tft9341_cache.h</FilePath>
+            </File>
+            <File>
+              <FileName>tft9341_cache_vbuf.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\tft9341\tft9341_cache_vbuf.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>grafics</GroupName>
+          <Files>
+            <File>
+              <FileName>font_droid_sans_mono_8x16_utf8.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\mane\font_droid_sans_mono_8x16_utf8.h</FilePath>
+            </File>
+            <File>
+              <FileName>painter.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\painter.h</FilePath>
+            </File>
+            <File>
+              <FileName>graphics.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\graphics.h</FilePath>
+            </File>
+            <File>
+              <FileName>graphics.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\graphics\graphics.c</FilePath>
+            </File>
+            <File>
+              <FileName>painter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\graphics\painter.c</FilePath>
+            </File>
+            <File>
+              <FileName>font.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\graphics\font.c</FilePath>
+            </File>
+            <File>
+              <FileName>font.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\font.h</FilePath>
+            </File>
+            <File>
+              <FileName>font_5x8_utf8.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\font_5x8_utf8.h</FilePath>
+            </File>
+            <File>
+              <FileName>font_10x16_utf8.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\font_10x16_utf8.h</FilePath>
+            </File>
+            <File>
+              <FileName>font_ascii_5x8.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\font_ascii_5x8.h</FilePath>
+            </File>
+            <File>
+              <FileName>graphics_inlines.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\graphics_inlines.h</FilePath>
+            </File>
+            <File>
+              <FileName>point.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\point.h</FilePath>
+            </File>
+            <File>
+              <FileName>rect.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\graphics\rect.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>dma</GroupName>
+          <Files>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\dma\dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>dma.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\dma\dma.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>defs</GroupName>
+          <Files>
+            <File>
+              <FileName>defs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\defs\defs.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>bits</GroupName>
+          <Files>
+            <File>
+              <FileName>bits.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\bits\bits.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>future</GroupName>
+          <Files>
+            <File>
+              <FileName>future.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\future\future.c</FilePath>
+            </File>
+            <File>
+              <FileName>future.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\future\future.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>mutex</GroupName>
+          <Files>
+            <File>
+              <FileName>mutex.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\mutex\mutex.h</FilePath>
+            </File>
+            <File>
+              <FileName>mutex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\mutex\mutex.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>fixet</GroupName>
+          <Files>
+            <File>
+              <FileName>fixed.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\fixed\fixed.h</FilePath>
+            </File>
+            <File>
+              <FileName>fixed16.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\fixed\fixed16.h</FilePath>
+            </File>
+            <File>
+              <FileName>fixed32.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\fixed\fixed32.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>errors</GroupName>
+          <Files>
+            <File>
+              <FileName>errors.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\errors\errors.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>gui</GroupName>
+          <Files>
+            <File>
+              <FileName>gui.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\gui\gui.c</FilePath>
+            </File>
+            <File>
+              <FileName>gui_anim_bitmap.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\gui\gui_anim_bitmap.c</FilePath>
+            </File>
+            <File>
+              <FileName>gui_object.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\gui\gui_object.c</FilePath>
+            </File>
+            <File>
+              <FileName>gui_widget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\gui\gui_widget.c</FilePath>
+            </File>
+            <File>
+              <FileName>gui.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_anim_bitmap.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_anim_bitmap.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_button.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_button.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_checkbox.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_checkbox.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_event.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_event.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_label.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_label.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_number_label.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_number_label.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_object.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_object.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_radiobutton.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_radiobutton.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_spinbox.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_spinbox.h</FilePath>
+            </File>
+            <File>
+              <FileName>gui_widget.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\gui\gui_widget.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>counter</GroupName>
+          <Files>
+            <File>
+              <FileName>counter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\counter\counter.c</FilePath>
+            </File>
+            <File>
+              <FileName>counter.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\counter\counter.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>list</GroupName>
+          <Files>
+            <File>
+              <FileName>list.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\list\list.h</FilePath>
+            </File>
+            <File>
+              <FileName>list.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\list\list.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>usart</GroupName>
+          <Files>
+            <File>
+              <FileName>usart_buf.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\usart\usart_buf.h</FilePath>
+            </File>
+            <File>
+              <FileName>usart_bus.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\usart\usart_bus.h</FilePath>
+            </File>
+            <File>
+              <FileName>circular_buffer.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\buffer\circular_buffer.h</FilePath>
+            </File>
+            <File>
+              <FileName>buffer_defs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\buffer\buffer_defs.h</FilePath>
+            </File>
+            <File>
+              <FileName>buffer.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\buffer\buffer.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>rtc</GroupName>
+          <Files>
+            <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\rtc\rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>rtc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\rtc\rtc.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>i2cm</GroupName>
+          <Files>
+            <File>
+              <FileName>i2cm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\i2cm\i2cm.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2cm.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\i2cm\i2cm.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>AM2320</GroupName>
+          <Files>
+            <File>
+              <FileName>AM2320.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\AM2320\AM2320.h</FilePath>
+            </File>
+            <File>
+              <FileName>AM2320.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\AM2320\AM2320.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>spi</GroupName>
+          <Files>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\spi\spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\spi\spi.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ds18b20</GroupName>
+          <Files>
+            <File>
+              <FileName>ds18x20.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\ds18x20\ds18x20.c</FilePath>
+            </File>
+            <File>
+              <FileName>ds18x20.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\ds18x20\ds18x20.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>one_wire</GroupName>
+          <Files>
+            <File>
+              <FileName>one_wire.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\one_wire\one_wire.h</FilePath>
+            </File>
+            <File>
+              <FileName>one_wire.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\one_wire\one_wire.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>uart</GroupName>
+          <Files>
+            <File>
+              <FileName>usart.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\USART\usart.h</FilePath>
+            </File>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\USART\usart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>input</GroupName>
+          <Files>
+            <File>
+              <FileName>key_input.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\LIB\input\key_input.c</FilePath>
+            </File>
+            <File>
+              <FileName>key_input.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\input\key_input.h</FilePath>
+            </File>
+            <File>
+              <FileName>keys.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\LIB\input\keys.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>BMP280</GroupName>
+          <Files>
+            <File>
+              <FileName>BME280.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\BMP280\BME280.c</FilePath>
+            </File>
+            <File>
+              <FileName>BME280.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\BMP280\BME280.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>::CMSIS</GroupName>
+        </Group>
+        <Group>
+          <GroupName>::Device</GroupName>
+        </Group>
+      </Groups>
+    </Target>
+  </Targets>
+
+  <RTE>
+    <apis/>
+    <components>
+      <component Cclass="CMSIS" Cgroup="CORE" Cvendor="ARM" Cversion="5.5.0" condition="ARMv6_7_8-M Device">
+        <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="5.8.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="ADC" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash">
+            <c>
+              <Optim>1</Optim>
+            </c>
+          </targetInfo>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="BKP" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="CRC" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="DBGMCU" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="DMA" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="EXTI" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="Flash" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="Framework" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="GPIO" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="I2C" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="PWR" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="RCC" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="RTC" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="SPI" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="TIM" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+      <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="USART" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH RCC">
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </component>
+    </components>
+    <files>
+      <file attr="config" category="source" name="CMSIS\RTOS\RTX\Templates\RTX_Conf_CM.c" version="4.72.0">
+        <instance index="0" removed="1">RTE\CMSIS\RTX_Conf_CM.c</instance>
+        <component Cclass="CMSIS" Cgroup="RTOS" Csub="Keil RTX" Cvendor="ARM" Cversion="4.80.0" condition="Cortex-M Device Startup"/>
+        <package name="CMSIS" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="ARM" version="4.5.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="header" name="RTE_Driver\Config\RTE_Device.h" version="1.1.1">
+        <instance index="0">RTE\Device\STM32F103C8\RTE_Device.h</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </file>
+      <file attr="config" category="source" condition="STM32F1xx MD ARMCC" name="Device\Source\ARM\startup_stm32f10x_md.s" version="1.0.0">
+        <instance index="0">RTE\Device\STM32F103C8\startup_stm32f10x_md.s</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </file>
+      <file attr="config" category="source" name="Device\StdPeriph_Driver\templates\stm32f10x_conf.h" version="3.5.0">
+        <instance index="0">RTE\Device\STM32F103C8\stm32f10x_conf.h</instance>
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="Framework" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </file>
+      <file attr="config" category="source" name="Device\Source\system_stm32f10x.c" version="1.0.0">
+        <instance index="0">RTE\Device\STM32F103C8\system_stm32f10x.c</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos>
+          <targetInfo name="STM32F103 Flash"/>
+        </targetInfos>
+      </file>
+      <file attr="config" category="header" name="RTE_Driver\Config\RTE_Device.h" version="1.1.1">
+        <instance index="0" removed="1">RTE\Device\STM32F103CB\RTE_Device.h</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" condition="STM32F1xx MD ARMCC" name="Device\Source\ARM\startup_stm32f10x_md.s" version="1.0.0">
+        <instance index="0" removed="1">RTE\Device\STM32F103CB\startup_stm32f10x_md.s</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="Device\StdPeriph_Driver\templates\stm32f10x_conf.h" version="3.5.0">
+        <instance index="0" removed="1">RTE\Device\STM32F103CB\stm32f10x_conf.h</instance>
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="Framework" Cvendor="Keil" Cversion="3.6.0" condition="STM32F1xx STDPERIPH"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="Device\Source\system_stm32f10x.c" version="1.0.0">
+        <instance index="0" removed="1">RTE\Device\STM32F103CB\system_stm32f10x.c</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.7.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.4.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="header" name="RTE_Driver\Config\RTE_Device.h" version="1.1.1">
+        <instance index="0" removed="1">RTE\Device\STM32F103ZE\RTE_Device.h</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.1.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" condition="STM32F1xx HD ARMCC" name="Device\Source\ARM\startup_stm32f10x_hd.s" version="1.0.0">
+        <instance index="0" removed="1">RTE\Device\STM32F103ZE\startup_stm32f10x_hd.s</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.1.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="Device\Source\system_stm32f10x.c" version="1.0.0">
+        <instance index="0" removed="1">RTE\Device\STM32F103ZE\system_stm32f10x.c</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="Keil" Cversion="1.0.0" condition="STM32F1xx CMSIS"/>
+        <package name="STM32F1xx_DFP" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="Keil" version="2.1.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="FileSystem\Config\FS_Config.c" version="6.2">
+        <instance index="0" removed="1">RTE\File_System\FS_Config.c</instance>
+        <component Cbundle="MDK-Pro" Cclass="File System" Cgroup="CORE" Cvariant="SFN" Cvendor="Keil" Cversion="6.6.0" condition="CMSIS Core with RTOS and File System I/O"/>
+        <package name="MDK-Middleware" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="Keil" version="7.0.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="FileSystem\Config\FS_Config_MC.h" version="6.2">
+        <instance index="0" removed="1">RTE\File_System\FS_Config_MC_0.h</instance>
+        <component Cbundle="MDK-Pro" Cclass="File System" Cgroup="Drive" Csub="Memory Card" Cvendor="Keil" Cversion="6.6.0" condition="File System and SD/MMC Driver" maxInstances="2"/>
+        <package name="MDK-Middleware" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="Keil" version="7.0.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="USB\Config\USBD_Config.c" version="5.00">
+        <instance index="0" removed="1">RTE\USB\USBD_Config_0.c</instance>
+        <component Cbundle="MDK-Pro" Cclass="USB" Cgroup="Device" Cvendor="Keil" Cversion="6.6.10" condition="USB Core and Device Driver" maxInstances="4"/>
+        <package name="MDK-Middleware" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="Keil" version="7.0.0"/>
+        <targetInfos/>
+      </file>
+      <file attr="config" category="source" name="USB\Config\USBD_Config_CDC.h" version="5.1.2">
+        <instance index="0" removed="1">RTE\USB\USBD_Config_CDC_0.h</instance>
+        <component Cbundle="MDK-Pro" Cclass="USB" Cgroup="Device" Csub="CDC" Cvendor="Keil" Cversion="6.6.10" condition="USB Device" maxInstances="4"/>
+        <package name="MDK-Middleware" schemaVersion="1.3" url="http://www.keil.com/pack/" vendor="Keil" version="7.0.0"/>
+        <targetInfos/>
+      </file>
+    </files>
+  </RTE>
+
+  <LayerInfo>
+    <Layers>
+      <Layer>
+        <LayName>oscilloscope</LayName>
+        <LayTarg>0</LayTarg>
+        <LayPrjMark>1</LayPrjMark>
+      </Layer>
+    </Layers>
+  </LayerInfo>
+
+</Project>

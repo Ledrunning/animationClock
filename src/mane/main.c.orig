@@ -1,0 +1,753 @@
+#include "stm32f10x.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "counter/counter.h"
+#include "rtc/rtc.h"
+#include "utils/delay.h"
+#include "fixed/fixed32.h"
+
+#include "tft9341/tft9341.h"
+#include "tft9341/tft9341_cache.h"
+#include "tft9341/tft9341_cache_vbuf.h"
+
+#include "graphics/graphics.h"
+#include "graphics/painter.h"
+#include "graphics/font_5x8_utf8.h"
+#include "graphics/font_10x16_utf8.h"
+#include "font_droid_sans_mono_8x16_utf8.h"
+
+#include "gui/gui.h"
+#include "gui/gui_object.h"
+#include "gui/gui_widget.h"
+#include "gui/gui_anim_bitmap.h"
+#include "clock_gui.h"
+
+#include "ds18x20.h"
+#include "one_wire.h"
+
+static counter_t counter = 0;
+static counter_t time_counter = 0;
+static counter_t anim_counter = 0;
+
+static spi_bus_t spi;
+static tft9341_t tft;
+#define TFT_PIXEL_SIZE 2
+#define TFT_WIDTH 320
+#define TFT_HEIGHT 240
+
+#define TFT_CACHE_BUFS_COUNT 2
+#define TFT_CACHE_BUF0_PIXELS 60
+#define TFT_CACHE_BUF1_PIXELS 100
+#define TFT_CACHE_BUF0_SIZE (TFT_CACHE_BUF0_PIXELS * TFT_PIXEL_SIZE)
+#define TFT_CACHE_BUF1_SIZE (TFT_CACHE_BUF1_PIXELS * TFT_PIXEL_SIZE)
+
+static uint8_t tft_cache_buf_data0[TFT_CACHE_BUF0_SIZE];
+static uint8_t tft_cache_buf_data1[TFT_CACHE_BUF1_SIZE];
+
+static tft9341_cache_buffer_t tft_cache_bufs[TFT_CACHE_BUFS_COUNT] = {
+    make_tft9341_cache_buffer(tft_cache_buf_data0, TFT_CACHE_BUF0_SIZE),
+    make_tft9341_cache_buffer(tft_cache_buf_data1, TFT_CACHE_BUF1_SIZE)
+};
+static tft9341_cache_t tft_cache = make_tft9341_cache(&tft, TFT_PIXEL_SIZE, tft_cache_bufs, TFT_CACHE_BUFS_COUNT, TFT9341_ROW_COL_REVERSE_MODE);
+static graphics_vbuf_t graph_vbuf = make_tft9341_cache_vbuf();
+static graphics_t graphics = make_tft9341_cache_graphics(&tft_cache, &graph_vbuf, TFT_WIDTH, TFT_HEIGHT, GRAPHICS_FORMAT_RGB_565);
+
+
+static const font_bitmap_t font_5x8_utf8_bitmaps[] = {
+    make_font_bitmap(32, 127, font_5x8_utf8_part0_data, FONT_5X8_UTF8_PART0_WIDTH, FONT_5X8_UTF8_PART0_HEIGHT, GRAPHICS_FORMAT_BW_1_V),
+    make_font_bitmap(0xb0, 0xb0, font_5x8_utf8_part1_data, FONT_5X8_UTF8_PART1_WIDTH, FONT_5X8_UTF8_PART1_HEIGHT, GRAPHICS_FORMAT_BW_1_V),
+    make_font_bitmap(0x400, 0x451, font_5x8_utf8_part2_data, FONT_5X8_UTF8_PART2_WIDTH, FONT_5X8_UTF8_PART2_HEIGHT, GRAPHICS_FORMAT_BW_1_V)
+};
+static font_t font5x8 = make_font(font_5x8_utf8_bitmaps, 3, 5, 8, 1, 0);
+
+const font_bitmap_t font_10x16_utf8_bitmaps[] = {
+    make_font_bitmap(32, 127, font_10x16_utf8_part0_data, FONT_10X16_UTF8_PART0_WIDTH, FONT_10X16_UTF8_PART0_HEIGHT, GRAPHICS_FORMAT_BW_1_V),
+    make_font_bitmap(0xb0, 0xb0, font_10x16_utf8_part1_data, FONT_10X16_UTF8_PART1_WIDTH, FONT_10X16_UTF8_PART1_HEIGHT, GRAPHICS_FORMAT_BW_1_V),
+    make_font_bitmap(0x400, 0x451, font_10x16_utf8_part2_data, FONT_10X16_UTF8_PART2_WIDTH, FONT_10X16_UTF8_PART2_HEIGHT, GRAPHICS_FORMAT_BW_1_V)
+};
+static font_t font10x16 = make_font(font_10x16_utf8_bitmaps, 3, 10, 16, 1, 0);
+
+const font_bitmap_t font_8x16_utf8_bitmaps[] = {
+    make_font_bitmap(32, 127, font_droid_sans_mono_8x16_utf8_32_127_data, FONT_DROID_SANS_MONO_8X16_UTF8_32_127_WIDTH, FONT_DROID_SANS_MONO_8X16_UTF8_32_127_HEIGHT, GRAPHICS_FORMAT_BW_1_V),
+    make_font_bitmap(0xb0, 0xb0, font_droid_sans_mono_8x16_utf8_0xb0_0xb0_data, FONT_DROID_SANS_MONO_8X16_UTF8_0XB0_0XB0_WIDTH, FONT_DROID_SANS_MONO_8X16_UTF8_0XB0_0XB0_HEIGHT, GRAPHICS_FORMAT_BW_1_V),
+    make_font_bitmap(0x400, 0x451, font_droid_sans_mono_8x16_utf8_0x400_0x451_data, FONT_DROID_SANS_MONO_8X16_UTF8_0X400_0X451_WIDTH, FONT_DROID_SANS_MONO_8X16_UTF8_0X400_0X451_HEIGHT, GRAPHICS_FORMAT_BW_1_V)
+};
+
+// GUI.
+#define MAKE_RGB565(r, g, b) TFT9341_MAKE_RGB565(r, g, b)
+
+#define THEME_COLOR_BACK MAKE_RGB565(0xff, 0xff, 0xff)
+#define THEME_COLOR_FRONT MAKE_RGB565(0x00, 0x00, 0x00)
+#define THEME_COLOR_PANEL MAKE_RGB565(0xf8, 0xf8, 0xf8)//0xf0
+#define THEME_COLOR_WIDGET MAKE_RGB565(0xe1, 0xe1, 0xe1)
+#define THEME_COLOR_BORDER MAKE_RGB565(0xb1, 0xb1, 0xb1)
+#define THEME_COLOR_FONT MAKE_RGB565(0x00, 0x00, 0x00)
+#define THEME_COLOR_FOCUS MAKE_RGB565(0x00, 0x78, 0xd7)
+#define THEME_COLOR_PRESSED MAKE_RGB565(0xcd, 0xe3, 0xf8)
+
+#define CLOCK_SET_COLOR MAKE_RGB565(0xFF, 0x00, 0x00)
+#define CLOCK_BACK_COLOR MAKE_RGB565(0, 0, 0)
+#define CLOCK_MONTHDAY_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
+#define CLOCK_MONTH_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
+#define CLOCK_WEEKDAY_COLOR MAKE_RGB565(0x00, 0xff, 0xff)
+#define CLOCK_TIME_COLOR MAKE_RGB565(0x00, 0xff, 0x00)
+#define CLOCK_TEMP_OUTD_COLOR MAKE_RGB565(0x00, 0x00, 0xff)
+#define CLOCK_TEMP_IND_COLOR MAKE_RGB565(0xff, 0x00, 0x00)
+
+static gui_theme_t theme = MAKE_GUI_THEME(
+                    THEME_COLOR_BACK, THEME_COLOR_FRONT,
+                    THEME_COLOR_PANEL, THEME_COLOR_WIDGET,
+                    THEME_COLOR_BORDER, THEME_COLOR_FONT,
+                    THEME_COLOR_FOCUS, THEME_COLOR_PRESSED,
+                    &font5x8, &font10x16);
+static gui_t gui = MAKE_GUI(&graphics, &theme);
+
+void Read_Enkoder(void);
+void ReadButton(void) ;
+void Button_ok_press(void);
+void Button_bolshe_press(void);
+void Button_menshe_press(void);
+
+volatile uint16_t ms_systic_second;
+volatile uint8_t button_second;	
+volatile uint8_t enkoder_button;
+volatile uint8_t enkoder_plus;
+volatile uint8_t enkoder_minus;
+
+uint32_t RTC_Counter = 0;
+RTC_DateTimeTypeDef RTC_DateTime, RTC_DateTime_old;
+
+extern float am2320_t;
+extern float am2320_h;
+
+#define delay   1000
+uint8_t read_AM2320=58;
+
+int err_AM2320=1;
+volatile float temp;
+
+one_wire_t one_wire;
+ds18x20_t ds18b20;
+fixed16_t temp_ds18b20;
+
+err_t err_ds18b20;
+float ds18b20_t;
+
+float bmp280_t = 0.0f, bmp280_p = 0.0f, bmp280_hf = 0.0f;
+
+volatile uint8_t settings_set_time_reset;
+volatile uint8_t settings_set_time;
+volatile uint8_t count_time_5minut=9;
+volatile uint8_t switch_h_p=1, switch_h_p_old;
+/*
+ * Обработчики прерываний.
+ */
+
+
+void SysTick_Handler(void)
+{   static uint16_t ms, s, s2;
+	  static uint32_t ms2;
+	
+    system_counter_tick();
+	
+	  if (ms_systic_second<1000)ms_systic_second++;
+    else 	{
+		  ms_systic_second=0;
+	    button_second++;	
+    }
+		
+		if (settings_set_time){
+		if (ms<1000) ms++;
+		else{	
+			ms=0;	
+			settings_set_time_reset++;
+		}		
+	  }
+		
+		if (s<1000) s++;
+		else{	
+			s=0;		
+      read_AM2320++;
+		}
+		
+		if (s2<5000) s2++;
+		else{	
+			s2=0;		
+      if (switch_h_p==1)switch_h_p=0;
+			else switch_h_p=1;
+		}
+		
+		if (ms2<60*1000) ms2++;
+		else{	
+			ms2=0;	
+			count_time_5minut++;  
+		}			
+}
+
+void SPI1_IRQHandler(void)
+{
+    spi_bus_irq_handler(&spi);
+}
+
+void DMA1_Channel2_IRQHandler(void)
+{
+    spi_bus_dma_rx_channel_irq_handler(&spi);
+}
+
+void DMA1_Channel3_IRQHandler(void)
+{
+    spi_bus_dma_tx_channel_irq_handler(&spi);
+}
+
+bool spi_callback(void)
+{
+    return tft9341_spi_callback(&tft);
+}
+
+
+static void init_sys_counter(void)
+{
+    system_counter_init(1000);
+    counter = system_counter_ticks();
+    SysTick_Config(SystemCoreClock / 1000);
+}
+
+static void init_periph_clock(void)
+{
+    // AFIO.
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+    // USART.
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    // DMA.
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+    // SPI.
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
+}
+
+static void init_spi(void)
+{
+    GPIO_InitTypeDef gpio_sck_mosi =
+        {.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_7, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_AF_PP};
+    GPIO_InitTypeDef gpio_miso =
+        {.GPIO_Pin = GPIO_Pin_6, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_IN_FLOATING};
+    
+    GPIO_Init(GPIOA, &gpio_sck_mosi);
+    GPIO_Init(GPIOA, &gpio_miso);
+    
+    SPI_InitTypeDef spi_is;
+    SPI_StructInit(&spi_is);
+    
+    spi_is.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+    spi_is.SPI_CPHA = SPI_CPHA_1Edge;
+    spi_is.SPI_CPOL = SPI_CPOL_Low;
+    spi_is.SPI_CRCPolynomial = 0;
+    spi_is.SPI_DataSize = SPI_DataSize_8b;
+    spi_is.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+    spi_is.SPI_FirstBit = SPI_FirstBit_MSB;
+    spi_is.SPI_Mode = SPI_Mode_Master;
+    spi_is.SPI_NSS = SPI_NSS_Soft;
+    
+    SPI_Init(SPI1, &spi_is);
+    SPI_Cmd(SPI1, ENABLE);
+    
+    spi_bus_init_t spi_bus_is;
+    spi_bus_is.spi_device = SPI1;
+    spi_bus_is.dma_rx_channel = DMA1_Channel2;
+    spi_bus_is.dma_tx_channel = DMA1_Channel3;
+    spi_bus_init(&spi, &spi_bus_is);
+    
+    spi_bus_set_callback(&spi, spi_callback);
+    
+    NVIC_SetPriority(SPI1_IRQn, 3);
+    NVIC_EnableIRQ(SPI1_IRQn);
+    
+    NVIC_SetPriority(DMA1_Channel2_IRQn, 4);
+    NVIC_SetPriority(DMA1_Channel3_IRQn, 4);
+    NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+    NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+}
+
+static void init_tft(void)
+{
+    GPIO_InitTypeDef gpio_dc = 
+    {.GPIO_Pin = GPIO_Pin_12, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
+    GPIO_InitTypeDef gpio_ce = 
+    {.GPIO_Pin = GPIO_Pin_11, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
+    GPIO_InitTypeDef gpio_rst = 
+    {.GPIO_Pin = GPIO_Pin_10, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
+    
+    GPIO_Init(GPIOB, &gpio_dc);
+    GPIO_Init(GPIOB, &gpio_ce);
+    GPIO_Init(GPIOB, &gpio_rst);
+    
+    tft9341_init_t tft_init;
+    
+    tft_init.ce_gpio = GPIOB; tft_init.ce_pin = GPIO_Pin_11;
+    tft_init.dc_gpio = GPIOB; tft_init.dc_pin = GPIO_Pin_12;
+    tft_init.reset_gpio = GPIOB; tft_init.reset_pin = GPIO_Pin_10;
+    tft_init.spi = &spi;
+    tft_init.transfer_id = TFT9341_DEFAULT_TRANSFER_ID;
+    
+    tft9341_init(&tft, &tft_init);
+    
+    tft9341_reset(&tft);
+    
+    tft9341_madctl_t madctl;
+    madctl.row_address_order = TFT9341_ROW_TOP_TO_BOTTOM;//TFT9341_ROW_BOTTOM_TO_TOP;
+    madctl.col_address_order = TFT9341_COL_LEFT_TO_RIGHT;//TFT9341_COL_RIGHT_TO_LEFT;
+    madctl.row_col_exchange = TFT9341_ROW_COL_REVERSE_MODE;
+    madctl.vertical_refresh = TFT9341_REFRESH_TOP_TO_BOTTOM;
+    madctl.color_order = TFT9341_COLOR_ORDER_BGR;
+    madctl.horizontal_refresh = TFT9341_REFRESH_LEFT_TO_RIGHT;
+    
+    tft9341_set_madctl(&tft, &madctl);
+    tft9341_set_pixel_format(&tft, TFT9341_PIXEL_16BIT, TFT9341_PIXEL_16BIT);
+    tft9341_sleep_out(&tft);
+    tft9341_display_on(&tft);
+}
+
+static void init_gui(void)
+{
+    clock_gui_init(&gui);
+    clock_gui_set_back_color(CLOCK_BACK_COLOR);
+    clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
+    clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
+    clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
+    clock_gui_set_time_color(CLOCK_TIME_COLOR);
+    clock_gui_set_temp_ind_color(CLOCK_TEMP_IND_COLOR);
+    clock_gui_set_temp_outd_color(CLOCK_TEMP_OUTD_COLOR);
+    clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
+}
+
+static void gui_iter(void)
+{
+    clock_gui_animation_step();
+}
+
+/*----------------------------------------------------------------------------
+ *   
+ *---------------------------------------------------------------------------*/
+void led_pwm_set(uint8_t procent)
+{		
+	TIM1->CCR1 = (procent *	TIM1->ARR)/100 ;
+}
+/*----------------------------------------------------------------------------
+ *   
+ *---------------------------------------------------------------------------*/
+uint8_t led_pwm_get(void)
+{			
+	uint8_t procent=(TIM1->CCR1*100)/ TIM1->ARR;
+	return procent;
+}
+
+/*----------------------------------------------------------------------------
+ *   
+ *---------------------------------------------------------------------------*/
+void led_pwm_on(void)
+{	
+	GPIO_InitTypeDef GPIO_InitStructure; 	
+
+	RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE); 	
+  GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_8;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;		
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		
+  GPIO_Init( GPIOA, &GPIO_InitStructure); 	
+
+  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+  TIM_OCInitTypeDef  TIM_OCInitStructure;
+  uint16_t TimerPeriod = 0;
+  uint16_t Channel1Pulse = 0;
+
+  /* Compute the value to be set in ARR regiter to generate signal frequency at 17.57 Khz */
+  TimerPeriod = (SystemCoreClock / 5000 ) - 1;
+  /* Compute CCR1 value to generate a duty cycle at 50% for channel 1 and 1N */
+  Channel1Pulse = (uint16_t) (((uint32_t) 5 * (TimerPeriod - 1)) / 10);
+
+  /* TIM1 clock enable */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 , ENABLE);
+  
+  /* Time Base configuration */
+  TIM_TimeBaseStructure.TIM_Prescaler = 0;
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseStructure.TIM_Period = TimerPeriod;
+  TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+  TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
+
+  TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
+
+  /* Channel 1, 2,3 and 4 Configuration in PWM mode */
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
+  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+  TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;
+  TIM_OCInitStructure.TIM_Pulse = Channel1Pulse;
+  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
+  TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
+  TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
+  TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCIdleState_Reset;
+
+  TIM_OC1Init(TIM1, &TIM_OCInitStructure);
+
+  /* TIM1 counter enable */
+  TIM_Cmd(TIM1, ENABLE);
+
+  /* TIM1 Main Output Enable */
+  TIM_CtrlPWMOutputs(TIM1, ENABLE);
+}
+
+/*----------------------------------------------------------------------------
+ *   ReadButton 13 - Up, 14 - Down, 15 - Ok
+ *---------------------------------------------------------------------------*/
+volatile uint8_t count_press_button_ok=0;	
+
+void ReadButton(void) {
+
+static uint8_t count_read_button_ok=0;		
+	count_read_button_ok++;
+	
+	//----------------------------------------------------------
+	static char buton, buton_old=1; 
+	//========================================================	
+	buton_old=buton;
+	buton=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);	
+	if (	((buton_old!=buton)&&(buton==0))){
+  delay_ms(5);
+	buton=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+	if ( ((buton_old!=buton)&&(buton==0))){
+  delay_ms(5);
+	buton=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+	if ( ((buton_old!=buton)&&(buton==0))){		
+  delay_ms(5);
+	buton=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+	if ( ((buton_old!=buton)&&(buton==0))){	
+  delay_ms(5);
+	buton=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+	if ( ((buton_old!=buton)&&(buton==0))){	
+		
+		ms_systic_second=0;
+		button_second=0;	
+		
+		while   ( ((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13)==0)&&(button_second<2))	 );
+		if (button_second<2) {				  
+			 Button_ok_press();
+	    }
+		  else {
+         	RTC_Counter = RTC_GetCounter();
+	        RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+		      RTC_DateTime.RTC_Seconds=0;		
+	        RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
+			}   
+	}	
+}
+}
+}
+}
+
+//----------------------------------------------------------
+	static char buton_min, buton_min_old=1;
+	//========================================================	
+	buton_min_old=buton_min;
+	buton_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);	
+	if (	((buton_min_old!=buton_min)&&(buton_min==0))){
+  delay_ms(5);
+	buton_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
+	if ( ((buton_min_old!=buton_min)&&(buton_min==0))){
+  delay_ms(5);
+	buton_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
+	if ( ((buton_min_old!=buton_min)&&(buton_min==0))){	
+  delay_ms(5);
+	buton_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
+	if ( ((buton_min_old!=buton_min)&&(buton_min==0))){	
+  delay_ms(5);
+	buton_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
+	if ( ((buton_min_old!=buton_min)&&(buton_min==0))){
+		
+		ms_systic_second=0;
+		button_second=0;	
+		
+		while   ( ((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14)==0)&&(button_second<2))	 ) 	;
+		if (button_second<2) {				  
+			 if (settings_set_time)Button_menshe_press();
+	    }
+		  else {
+
+			}   
+	}	
+}
+}
+}
+}
+//----------------------------------------------------------	
+//----------------------------------------------------------
+	static char buton_plus, buton_plus_old=1; 
+	//========================================================	
+	buton_plus_old=buton_plus;
+	buton_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);	
+	if (	((buton_plus_old!=buton_plus)&&(buton_plus==0))){
+  delay_ms(5);
+	buton_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+	if ( ((buton_plus_old!=buton_plus)&&(buton_plus==0))){
+  delay_ms(5);
+	buton_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+	if ( ((buton_plus_old!=buton_plus)&&(buton_plus==0))){	
+  delay_ms(5);
+	buton_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+	if ( ((buton_plus_old!=buton_plus)&&(buton_plus==0))){	
+  delay_ms(5);
+	buton_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+	if ( ((buton_plus_old!=buton_plus)&&(buton_plus==0))){
+		
+		ms_systic_second=0;
+		button_second=0;	
+		
+		while   ( ((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15)==0)&&(button_second<2))	 ) 	;
+		if (button_second<2) {				  
+			 if (settings_set_time)Button_bolshe_press();
+	    }
+		  else {
+
+			}   
+	}	
+}
+}
+}
+}
+}
+
+enum {
+	hour,
+	min,
+	day,	
+	mouns,
+
+} clock_set;
+
+void Button_ok_press(void){
+	settings_set_time_reset=0;
+	
+	if (settings_set_time==1){		
+	  if (clock_set<mouns)clock_set++;
+	  else clock_set=hour;
+  }
+	else settings_set_time=1;	
+ 
+	switch (clock_set){
+		case hour:
+    clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);	
+    clock_gui_set_time_hour_color(CLOCK_SET_COLOR);
+		break;
+		case min:
+		clock_gui_set_time_hour_color(CLOCK_TIME_COLOR);
+    clock_gui_set_time_mins_color(CLOCK_SET_COLOR);
+		break;	
+		case day:
+    clock_gui_set_time_color(CLOCK_TIME_COLOR);			
+    clock_gui_set_monthday_color(CLOCK_SET_COLOR);
+		break;
+		case mouns:
+		clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
+    clock_gui_set_month_color(CLOCK_SET_COLOR);
+		break;			
+	}		
+
+	
+}
+void Button_bolshe_press(void){
+	settings_set_time_reset=0;
+	
+	RTC_Counter = RTC_GetCounter();
+	RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+	switch (clock_set){
+		case hour:
+			if (RTC_DateTime.RTC_Hours <23)RTC_DateTime.RTC_Hours++;
+		  else RTC_DateTime.RTC_Hours=0;
+		break;
+		case min:
+			if (RTC_DateTime.RTC_Minutes <59)RTC_DateTime.RTC_Minutes++;
+		  else RTC_DateTime.RTC_Minutes=0;			
+		break;	
+		case mouns:
+			if (RTC_DateTime.RTC_Month <12)RTC_DateTime.RTC_Month++;
+		  else RTC_DateTime.RTC_Month=1;					
+		break;	
+		case day:
+			if (RTC_DateTime.RTC_Date <31)RTC_DateTime.RTC_Date++;
+		  else RTC_DateTime.RTC_Date=0;					
+		break;	
+
+		
+	}	
+	RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
+}
+
+void Button_menshe_press(void){
+	settings_set_time_reset=0;
+	
+	RTC_Counter = RTC_GetCounter();
+	RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+	switch (clock_set){
+		case hour:
+			if (RTC_DateTime.RTC_Hours >0)RTC_DateTime.RTC_Hours--;
+		  else RTC_DateTime.RTC_Hours=23;
+		break;
+		case min:
+			if (RTC_DateTime.RTC_Minutes >0)RTC_DateTime.RTC_Minutes--;
+		  else RTC_DateTime.RTC_Minutes=59;			
+		break;	
+		case mouns:
+			if (RTC_DateTime.RTC_Month >0)RTC_DateTime.RTC_Month--;
+		  else RTC_DateTime.RTC_Month=12;					
+		break;	
+		case day:
+			if (RTC_DateTime.RTC_Date >0)RTC_DateTime.RTC_Date--;
+		  else RTC_DateTime.RTC_Date=31;					
+		break;	
+			
+	}	
+	RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));	
+	
+}
+
+int main(void)
+{
+    NVIC_SetPriorityGrouping(0x3);
+    
+    init_periph_clock();
+    init_sys_counter();	
+    init_spi();
+    init_tft();
+
+		one_wire_init(&one_wire, GPIOB,  GPIO_Pin_8);
+		if		(one_wire_reset(&one_wire)){				
+      err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);	
+		  err_ds18b20=ds18x20_select(&ds18b20);
+      err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);		
+		  err_ds18b20=ds18x20_start_conversion(&ds18b20);
+		}
+
+		led_pwm_on();	
+						
+    init_gui();    
+    //time_counter = 0;
+    anim_counter = system_counter_ticks();   
+		
+		RTC_Counter = RTC_GetCounter();      
+    RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+		
+		clock_gui_toggle_time_sep();
+		clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);          
+		clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
+		clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
+    clock_gui_set_month(RTC_DateTime.RTC_Month-1);    
+    clock_gui_set_monthday(RTC_DateTime.RTC_Date);
+					
+					
+					
+    if (RTC_Init() == 1) {
+        // Если первая инициализация RTC устанавливаем начальную дату, например 22.09.2016 14:30:00
+        RTC_DateTime.RTC_Date = 11;
+        RTC_DateTime.RTC_Month = 4;
+        RTC_DateTime.RTC_Year = 2022;
+ 
+        RTC_DateTime.RTC_Hours = 12;
+        RTC_DateTime.RTC_Minutes = 00;
+        RTC_DateTime.RTC_Seconds = 00;
+        RTC_DateTime.RTC_Wday=7;
+			
+        //После инициализации требуется задержка. Без нее время не устанавливается.
+        delay_ms(1500);
+        RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
+    }		
+
+				
+    for(;;){
+			ReadButton();			
+			
+				
+				if (ds18x20_conversion_done(&ds18b20)){
+					//err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20);
+					
+					if (err_ds18b20==0) {
+						err_ds18b20=ds18x20_start_conversion(&ds18b20);
+					}
+					else 		if		(one_wire_reset(&one_wire)){				
+           err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);	
+		       err_ds18b20=ds18x20_select(&ds18b20);
+           err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);		
+		       err_ds18b20=ds18x20_start_conversion(&ds18b20);
+		     }		
+				}
+				
+				uint8_t set_temp_for_ds18b20=0;											
+				//=============================================================================
+				if (ds18x20_conversion_done(&ds18b20)){
+					err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20);
+					
+					if (err_ds18b20==0) {
+					  clock_gui_set_temp_ind(temp_ds18b20);								
+						set_temp_for_ds18b20=1;
+						
+						ds18b20_t= (float)temp_ds18b20/256.0; 
+						
+						//err_ds18b20=ds18x20_start_conversion(&ds18b20);
+					}
+					else 		if		(one_wire_reset(&one_wire)){				
+           err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);	
+		       err_ds18b20=ds18x20_select(&ds18b20);
+           err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);		
+		       err_ds18b20=ds18x20_start_conversion(&ds18b20);
+		     }		
+				}
+
+        if (settings_set_time_reset>10){
+					settings_set_time_reset=0;
+					settings_set_time=0;
+          clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
+          clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
+          clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
+          clock_gui_set_time_color(CLOCK_TIME_COLOR);
+				}			 
+					
+			  RTC_Counter = RTC_GetCounter();
+        RTC_DateTime_old=RTC_DateTime;
+        RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+
+			
+			 if (RTC_DateTime_old.RTC_Seconds!=RTC_DateTime.RTC_Seconds){
+				    clock_gui_toggle_time_sep();
+			 }
+			 
+			 if (RTC_DateTime_old.RTC_Minutes!=RTC_DateTime.RTC_Minutes){
+					  clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);          
+			 }	
+			 
+			 if (RTC_DateTime_old.RTC_Hours!=RTC_DateTime.RTC_Hours){
+					  clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
+				 
+				 if ((RTC_DateTime.RTC_Hours>6)&&(RTC_DateTime.RTC_Hours<22)){
+					 if (led_pwm_get()<100)led_pwm_set(100);
+				 }
+				 else if (led_pwm_get()>30)led_pwm_set(30);
+		 
+			 }
+			 
+			 if (RTC_DateTime_old.RTC_Wday!=RTC_DateTime.RTC_Wday){
+					  clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
+			 }			 
+			 
+			 if (RTC_DateTime_old.RTC_Month!=RTC_DateTime.RTC_Month){					      
+          clock_gui_set_month(RTC_DateTime.RTC_Month-1);    
+			 }				 
+			 if (RTC_DateTime_old.RTC_Date!=RTC_DateTime.RTC_Date){
+					clock_gui_set_monthday(RTC_DateTime.RTC_Date);
+			 }				 
+			
+        if(system_counter_diff(&anim_counter) >= system_counter_ticks_per_sec() / 35){
+            anim_counter = system_counter_ticks();
+            gui_iter();
+        }
+    }
+}
