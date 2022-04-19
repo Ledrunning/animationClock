@@ -49,7 +49,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\Output\</OutputDirectory>
-          <OutputName>clock_scheme2_0_13</OutputName>
+          <OutputName>animation_clock_v0.1b</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -381,7 +381,7 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>mane</GroupName>
+          <GroupName>main</GroupName>
           <Files>
             <File>
               <FileName>main.c</FileName>

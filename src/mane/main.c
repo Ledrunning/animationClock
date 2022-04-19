@@ -127,8 +127,8 @@ volatile uint8_t switch_h_p=1, switch_h_p_old;
 
 
 void SysTick_Handler(void)
-{   static uint16_t ms, s, s2;
-    static uint32_t ms2;
+{   
+	  static uint16_t ms, s;
 
     system_counter_tick();
 
@@ -145,23 +145,11 @@ void SysTick_Handler(void)
             settings_set_time_reset++;
         }
     }
-
+		
+		//Тут читался датчик влажности
     if (s<1000) s++;
     else {
         s=0;
-    }
-
-    if (s2<5000) s2++;
-    else {
-        s2=0;
-        if (switch_h_p==1)switch_h_p=0;
-        else switch_h_p=1;
-    }
-
-    if (ms2<60*1000) ms2++;
-    else {
-        ms2=0;
-        count_time_5minut++;
     }
 }
 
@@ -250,6 +238,33 @@ static void init_spi(void)
     NVIC_EnableIRQ(DMA1_Channel3_IRQn);
 }
 
+/*----------------------------------------------------------------------------
+ * read_button 13 - Ok, 14 - Down, 15 - Up
+ * GPIO_Mode_AIN — аналоговый вход;
+ * GPIO_Mode_IN_FLOATING — вход без подтяжки, болтающийся (англ. float) в воздухе
+ * GPIO_Mode_IPD — вход с подтяжкой к земле (англ. Pull-down)
+ * GPIO_Mode_IPU — вход с подтяжкой к питанию (англ. Pull-up)
+ * GPIO_Mode_Out_OD — выход с открытым стоком (англ. Open Drain)
+ * GPIO_Mode_Out_PP — выход двумя состояниями (англ. Push-Pull — туда-сюда)
+ * GPIO_Mode_AF_OD — выход с открытым стоком для альтернативных функций (англ. Alternate Function).
+ * Используется в случаях, когда выводом должна управлять периферия, 
+ * прикрепленная к данному разряду порта (например, вывод Tx USART и т.п.)
+ * GPIO_Mode_AF_PP — то же самое, но с двумя состояниями
+ *---------------------------------------------------------------------------*/
+static void button_init(void){
+	
+	GPIO_InitTypeDef button_ok =
+    {.GPIO_Pin = GPIO_Pin_13, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
+    GPIO_InitTypeDef button_down =
+    {.GPIO_Pin = GPIO_Pin_14, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
+    GPIO_InitTypeDef button_up =
+    {.GPIO_Pin = GPIO_Pin_15, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
+
+    GPIO_Init(GPIOB, &button_up);
+    GPIO_Init(GPIOB, &button_down);
+    GPIO_Init(GPIOB, &button_ok);
+}
+	
 static void init_tft(void)
 {
     GPIO_InitTypeDef gpio_dc =
@@ -310,25 +325,18 @@ static void gui_iter(void)
     clock_gui_animation_step();
 }
 
-/*----------------------------------------------------------------------------
- *
- *---------------------------------------------------------------------------*/
+
 void led_pwm_set(uint8_t procent)
 {
     TIM1->CCR1 = (procent *	TIM1->ARR)/100 ;
 }
-/*----------------------------------------------------------------------------
- *
- *---------------------------------------------------------------------------*/
+
 uint8_t led_pwm_get(void)
 {
     uint8_t procent=(TIM1->CCR1*100)/ TIM1->ARR;
     return procent;
 }
 
-/*----------------------------------------------------------------------------
- *
- *---------------------------------------------------------------------------*/
 void led_pwm_on(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -381,50 +389,38 @@ void led_pwm_on(void)
 }
 
 /*----------------------------------------------------------------------------
- *   read_button 13 - Up, 14 - Down, 15 - Ok
+ *   read_button 13 - Ok, 14 - Down, 15 - Up
  *---------------------------------------------------------------------------*/
 volatile uint8_t count_press_button_ok=0;
-
-void test_button(void){
-	
-	static char button;
-		 
-	button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-	
-	if(button == 0x00){
-		button_ok_press();
-	}
-	
-}
 
 void read_button(void) {
 
     static uint8_t count_read_button_ok=0;
     count_read_button_ok++;
 
-    //----------------------------------------------------------
+    //--------------------------------------------------------
     static char button, button_old=1;
     //========================================================
     button_old=button;
     button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-    if (	((button_old!=button)&&(button==0))) {
+    if (((button_old!=button)&&(button==0))) {
         delay_ms(5);
         button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-        if ( ((button_old!=button)&&(button==0))) {
+        if (((button_old!=button)&&(button==0))) {
             delay_ms(5);
             button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-            if ( ((button_old!=button)&&(button==0))) {
+            if (((button_old!=button)&&(button==0))) {
                 delay_ms(5);
                 button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-                if ( ((button_old!=button)&&(button==0))) {
+                if (((button_old!=button)&&(button==0))) {
                     delay_ms(5);
                     button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-                    if ( ((button_old!=button)&&(button==0))) {
+                    if (((button_old!=button)&&(button==0))) {
 
                         ms_systic_second=0;
                         button_second=0;
 
-                        while   ( ((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13)==0)&&(button_second<2))	 );
+                        while   (((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13)==0)&&(button_second<2))	 );
                         if (button_second<2) {
                             button_ok_press();
                         }
@@ -515,7 +511,7 @@ enum {
     hour,
     min,
     day,
-    mouns,
+    month,
 
 } clock_set;
 
@@ -523,7 +519,7 @@ void button_ok_press(void) {
     settings_set_time_reset=0;
 
     if (settings_set_time==1) {
-        if (clock_set<mouns)clock_set++;
+        if (clock_set<month)clock_set++;
         else clock_set=hour;
     }
     else settings_set_time=1;
@@ -541,14 +537,13 @@ void button_ok_press(void) {
         clock_gui_set_time_color(CLOCK_TIME_COLOR);
         clock_gui_set_monthday_color(CLOCK_SET_COLOR);
         break;
-    case mouns:
+    case month:
         clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
         clock_gui_set_month_color(CLOCK_SET_COLOR);
         break;
     }
-
-
 }
+
 void button_up_press(void) {
     settings_set_time_reset=0;
 
@@ -563,7 +558,7 @@ void button_up_press(void) {
         if (RTC_DateTime.RTC_Minutes <59)RTC_DateTime.RTC_Minutes++;
         else RTC_DateTime.RTC_Minutes=0;
         break;
-    case mouns:
+    case month:
         if (RTC_DateTime.RTC_Month <12)RTC_DateTime.RTC_Month++;
         else RTC_DateTime.RTC_Month=1;
         break;
@@ -571,9 +566,8 @@ void button_up_press(void) {
         if (RTC_DateTime.RTC_Date <31)RTC_DateTime.RTC_Date++;
         else RTC_DateTime.RTC_Date=0;
         break;
-
-
     }
+		
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
 }
 
@@ -591,7 +585,7 @@ void button_down_press(void) {
         if (RTC_DateTime.RTC_Minutes >0)RTC_DateTime.RTC_Minutes--;
         else RTC_DateTime.RTC_Minutes=59;
         break;
-    case mouns:
+    case month:
         if (RTC_DateTime.RTC_Month >0)RTC_DateTime.RTC_Month--;
         else RTC_DateTime.RTC_Month=12;
         break;
@@ -599,10 +593,9 @@ void button_down_press(void) {
         if (RTC_DateTime.RTC_Date >0)RTC_DateTime.RTC_Date--;
         else RTC_DateTime.RTC_Date=31;
         break;
-
     }
+		
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
-
 }
 
 int main(void)
@@ -613,7 +606,8 @@ int main(void)
     init_sys_counter();
     init_spi();
     init_tft();
-
+    button_init();
+	  
     one_wire_init(&one_wire, GPIOB,  GPIO_Pin_8);
     if		(one_wire_reset(&one_wire)) {
         err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
@@ -638,8 +632,6 @@ int main(void)
     clock_gui_set_month(RTC_DateTime.RTC_Month-1);
     clock_gui_set_monthday(RTC_DateTime.RTC_Date);
 
-
-
     if (RTC_Init() == 1) {
         // Если первая инициализация RTC устанавливаем начальную дату, например 22.09.2016 14:30:00
         RTC_DateTime.RTC_Date = 11;
@@ -655,7 +647,6 @@ int main(void)
         delay_ms(1500);
         RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
     }
-
 
     for(;;) {
         read_button();
