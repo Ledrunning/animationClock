@@ -129,10 +129,13 @@ volatile uint8_t switch_h_p=1, switch_h_p_old;
 void SysTick_Handler(void)
 {
     static uint16_t ms, s;
+		static uint16_t button_ms;
 
     system_counter_tick();
 
-    if (second_systick_ms<1000)second_systick_ms++;
+    if (second_systick_ms<1000) {
+			second_systick_ms++;
+		}
     else 	{
         second_systick_ms=0;
         button_second++;
@@ -399,24 +402,18 @@ volatile uint8_t count_press_button_ok=0;
 
 void read_button(void) {
 
-   static uint16_t old = (1 << BTNOk_Pin) | (1 << BTNDown_Pin) | (1 << BTNUp_Pin);
-   uint16_t port = GPIOB->IDR; // однократное чтение порта
-   uint8_t btn0_flag = 0;
-	
-   if((port & (1 << BTNOk_Pin) == 0)) 
-   {
-       if((old & (1 & BTNOk_Pin) != 0)) 
-       {
-           btn0_flag = 1;       
-           old &= ~(1 << BTNOk_Pin);
-       }   
-			 
-			 if(btn0_flag == 1){
-				 second_systick_ms=0;
-                        button_second=0;
+  //--------------------------- OK -----------------------------
+    static char button, button_old=1;
 
-                        while (((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13)==0)&&(button_second<2)));
-											
+    button_old=button;
+
+                    button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+										
+                    if (((button_old!=button)&&(button==0))) {
+
+                        second_systick_ms=0;
+                        button_second=0;
+                        										
                         if (button_second<2) {
                             button_ok_press();
                         }
@@ -426,15 +423,45 @@ void read_button(void) {
                             RTC_DateTime.RTC_Seconds=0;
                             RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
                         }
-			 }
-   } 
-	 else
-   {
-      old |= 1 << BTNOk_Pin;
-   }
+                    }
+ //------------------------- DOWN ---------------------------------
+    static char button_min, button_min_old=1;
 
-   /* повторить то же самое для BTN1 и BTN2 */
+    button_min_old=button_min;
+    button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
 
+                    if (((button_min_old!=button_min)&&(button_min==0))) {
+
+                        second_systick_ms=0;
+                        button_second=0;
+                        
+                        if (button_second<2) {
+                            if (settings_set_time) {
+															button_down_press();
+														}
+                        }
+                    }
+		
+	//------------------------- UP ---------------------------------
+    static char button_plus, button_plus_old=1;
+
+    button_plus_old=button_plus;
+    button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+
+
+                    if (((button_plus_old!=button_plus)&&(button_plus==0))) {
+
+                        second_systick_ms=0;
+                        button_second=0;
+                       
+                        if (button_second<2) {
+                            if (settings_set_time) {
+															button_up_press(); 
+														}
+                        }
+
+                    }
+			
 }
 
 

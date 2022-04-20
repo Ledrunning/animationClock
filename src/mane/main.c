@@ -99,13 +99,10 @@ static gui_theme_t theme = MAKE_GUI_THEME(
                                &font5x8, &font10x16);
 static gui_t gui = MAKE_GUI(&graphics, &theme);
 
-void read_button(void) ;
-void button_ok_press(void);
-void button_up_press(void);
-void button_down_press(void);
-
 volatile uint16_t second_systick_ms;
 volatile uint8_t button_second;
+
+volatile uint8_t count_press_button_ok=0;
 
 uint32_t RTC_Counter = 0;
 RTC_DateTimeTypeDef RTC_DateTime, RTC_DateTime_old;
@@ -121,6 +118,22 @@ volatile uint8_t settings_set_time_reset;
 volatile uint8_t settings_set_time;
 volatile uint8_t count_time_5minut=9;
 volatile uint8_t switch_h_p=1, switch_h_p_old;
+
+enum {
+    hour,
+    min,
+    day,
+    month,
+
+} clock_set;
+
+void button_init(void);
+void read_button(void) ;
+void button_ok_press(void);
+void button_up_press(void);
+void button_down_press(void);
+void first_time_rtc_setup(void);
+
 /*
  * Обработчики прерываний.
  */
@@ -129,13 +142,13 @@ volatile uint8_t switch_h_p=1, switch_h_p_old;
 void SysTick_Handler(void)
 {
     static uint16_t ms, s;
-		static uint16_t button_ms;
+    static uint16_t button_ms;
 
     system_counter_tick();
 
     if (second_systick_ms<1000) {
-			second_systick_ms++;
-		}
+        second_systick_ms++;
+    }
     else 	{
         second_systick_ms=0;
         button_second++;
@@ -149,7 +162,7 @@ void SysTick_Handler(void)
         }
     }
 
-    //Тут читался датчик влажности
+    /* Тут читался датчик влажности */
     if (s<1000) s++;
     else {
         s=0;
@@ -186,14 +199,14 @@ static void init_sys_counter(void)
 
 static void init_periph_clock(void)
 {
-    // AFIO.
+    /* AFIO. */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-    // USART.
+    /* USART. */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-    // DMA.
+    /* DMA. */
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-    // SPI.
+    /* SPI. */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 }
@@ -239,33 +252,6 @@ static void init_spi(void)
     NVIC_SetPriority(DMA1_Channel3_IRQn, 4);
     NVIC_EnableIRQ(DMA1_Channel2_IRQn);
     NVIC_EnableIRQ(DMA1_Channel3_IRQn);
-}
-
-/*----------------------------------------------------------------------------
- * read_button 13 - Ok, 14 - Down, 15 - Up
- * GPIO_Mode_AIN — аналоговый вход;
- * GPIO_Mode_IN_FLOATING — вход без подтяжки, болтающийся (англ. float) в воздухе
- * GPIO_Mode_IPD — вход с подтяжкой к земле (англ. Pull-down)
- * GPIO_Mode_IPU — вход с подтяжкой к питанию (англ. Pull-up)
- * GPIO_Mode_Out_OD — выход с открытым стоком (англ. Open Drain)
- * GPIO_Mode_Out_PP — выход двумя состояниями (англ. Push-Pull — туда-сюда)
- * GPIO_Mode_AF_OD — выход с открытым стоком для альтернативных функций (англ. Alternate Function).
- * Используется в случаях, когда выводом должна управлять периферия,
- * прикрепленная к данному разряду порта (например, вывод Tx USART и т.п.)
- * GPIO_Mode_AF_PP — то же самое, но с двумя состояниями
- *---------------------------------------------------------------------------*/
-static void button_init(void) {
-
-    GPIO_InitTypeDef button_ok =
-    {.GPIO_Pin = GPIO_Pin_13, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
-    GPIO_InitTypeDef button_down =
-    {.GPIO_Pin = GPIO_Pin_14, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
-    GPIO_InitTypeDef button_up =
-    {.GPIO_Pin = GPIO_Pin_15, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
-
-    GPIO_Init(GPIOB, &button_up);
-    GPIO_Init(GPIOB, &button_down);
-    GPIO_Init(GPIOB, &button_ok);
 }
 
 static void init_tft(void)
@@ -391,87 +377,224 @@ void led_pwm_on(void)
     TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }
 
+int main(void)
+{
+    NVIC_SetPriorityGrouping(0x3);
+
+    init_periph_clock();
+    init_sys_counter();
+    init_spi();
+    init_tft();
+    button_init();
+
+    one_wire_init(&one_wire, GPIOB,  GPIO_Pin_8);
+    if		(one_wire_reset(&one_wire)) {
+        err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
+        err_ds18b20=ds18x20_select(&ds18b20);
+        err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);
+        err_ds18b20=ds18x20_start_conversion(&ds18b20);
+    }
+
+    led_pwm_on();
+
+    init_gui();
+    //time_counter = 0;
+    anim_counter = system_counter_ticks();
+
+    RTC_Counter = RTC_GetCounter();
+    RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+
+    clock_gui_toggle_time_sep();
+    clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
+    clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
+    clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
+    clock_gui_set_month(RTC_DateTime.RTC_Month-1);
+    clock_gui_set_monthday(RTC_DateTime.RTC_Date);
+
+    first_time_rtc_setup();
+
+    for(;;) {
+
+				uint8_t set_temp_for_ds18b20=0;
+			
+        read_button();
+        if (ds18x20_conversion_done(&ds18b20)) {
+            /* err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20); */
+
+            if (err_ds18b20==0) {
+                err_ds18b20=ds18x20_start_conversion(&ds18b20);
+            }
+            else 		if		(one_wire_reset(&one_wire)) {
+                err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
+                err_ds18b20=ds18x20_select(&ds18b20);
+                err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);
+                err_ds18b20=ds18x20_start_conversion(&ds18b20);
+            }
+        }
+
+        if (ds18x20_conversion_done(&ds18b20)) {
+            err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20);
+
+            if (err_ds18b20==0) {
+                clock_gui_set_temp_ind(temp_ds18b20);
+                set_temp_for_ds18b20=1;
+
+                ds18b20_t= (float)temp_ds18b20/256.0;
+
+                /* err_ds18b20=ds18x20_start_conversion(&ds18b20); */
+            }
+            else 		if		(one_wire_reset(&one_wire)) {
+                err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
+                err_ds18b20=ds18x20_select(&ds18b20);
+                err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);
+                err_ds18b20=ds18x20_start_conversion(&ds18b20);
+            }
+        }
+
+        if (settings_set_time_reset>10) {
+            settings_set_time_reset=0;
+            settings_set_time=0;
+            clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
+            clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
+            clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
+            clock_gui_set_time_color(CLOCK_TIME_COLOR);
+        }
+
+        RTC_Counter = RTC_GetCounter();
+        RTC_DateTime_old=RTC_DateTime;
+        RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+
+        if (RTC_DateTime_old.RTC_Seconds!=RTC_DateTime.RTC_Seconds) {
+            clock_gui_toggle_time_sep();
+        }
+
+        if (RTC_DateTime_old.RTC_Minutes!=RTC_DateTime.RTC_Minutes) {
+            clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
+        }
+
+        if (RTC_DateTime_old.RTC_Hours!=RTC_DateTime.RTC_Hours) {
+            clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
+						
+					/* Полная яркость дисплея в дневное время суток */
+            if ((RTC_DateTime.RTC_Hours>6)&&(RTC_DateTime.RTC_Hours<22)) {
+                if (led_pwm_get()<100) {
+									led_pwm_set(100);
+								}
+            }
+            else if (led_pwm_get()>30) {
+							led_pwm_set(30);
+						}
+        }
+
+        if (RTC_DateTime_old.RTC_Wday!=RTC_DateTime.RTC_Wday) {
+            clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
+        }
+
+        if (RTC_DateTime_old.RTC_Month!=RTC_DateTime.RTC_Month) {
+            clock_gui_set_month(RTC_DateTime.RTC_Month-1);
+        }
+        if (RTC_DateTime_old.RTC_Date!=RTC_DateTime.RTC_Date) {
+            clock_gui_set_monthday(RTC_DateTime.RTC_Date);
+        }
+
+        if(system_counter_diff(&anim_counter) >= system_counter_ticks_per_sec() / 35) {
+            anim_counter = system_counter_ticks();
+            gui_iter();
+        }
+    }
+}
+
+/*----------------------------------------------------------------------------
+ * read_button 13 - Ok, 14 - Down, 15 - Up
+ * GPIO_Mode_AIN — аналоговый вход;
+ * GPIO_Mode_IN_FLOATING — вход без подтяжки, болтающийся (англ. float) в воздухе
+ * GPIO_Mode_IPD — вход с подтяжкой к земле (англ. Pull-down)
+ * GPIO_Mode_IPU — вход с подтяжкой к питанию (англ. Pull-up)
+ * GPIO_Mode_Out_OD — выход с открытым стоком (англ. Open Drain)
+ * GPIO_Mode_Out_PP — выход двумя состояниями (англ. Push-Pull — туда-сюда)
+ * GPIO_Mode_AF_OD — выход с открытым стоком для альтернативных функций (англ. Alternate Function).
+ * Используется в случаях, когда выводом должна управлять периферия,
+ * прикрепленная к данному разряду порта (например, вывод Tx USART и т.п.)
+ * GPIO_Mode_AF_PP — то же самое, но с двумя состояниями
+ *---------------------------------------------------------------------------*/
+static void button_init(void) {
+
+    GPIO_InitTypeDef button_ok =
+    {.GPIO_Pin = GPIO_Pin_13, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
+    GPIO_InitTypeDef button_down =
+    {.GPIO_Pin = GPIO_Pin_14, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
+    GPIO_InitTypeDef button_up =
+    {.GPIO_Pin = GPIO_Pin_15, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
+
+    GPIO_Init(GPIOB, &button_up);
+    GPIO_Init(GPIOB, &button_down);
+    GPIO_Init(GPIOB, &button_ok);
+}
+
 /*----------------------------------------------------------------------------
  *   read_button 13 - Ok, 14 - Down, 15 - Up
  *---------------------------------------------------------------------------*/
-volatile uint8_t count_press_button_ok=0;
-
-#define BTNOk_Pin 13
-#define BTNDown_Pin 14
-#define BTNUp_Pin 15
-
 void read_button(void) {
 
-  //--------------------------- OK -----------------------------
+    /* --------------------------- OK ----------------------------- */
     static char button, button_old=1;
 
     button_old=button;
 
-                    button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-										
-                    if (((button_old!=button)&&(button==0))) {
+    button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
 
-                        second_systick_ms=0;
-                        button_second=0;
-                        										
-                        if (button_second<2) {
-                            button_ok_press();
-                        }
-                        else {
-                            RTC_Counter = RTC_GetCounter();
-                            RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
-                            RTC_DateTime.RTC_Seconds=0;
-                            RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
-                        }
-                    }
- //------------------------- DOWN ---------------------------------
+    if (((button_old!=button)&&(button==0))) {
+
+        second_systick_ms=0;
+        button_second=0;
+
+        if (button_second<2) {
+            button_ok_press();
+        }
+        else {
+            RTC_Counter = RTC_GetCounter();
+            RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+            RTC_DateTime.RTC_Seconds=0;
+            RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
+        }
+    }
+		
+	 /* ------------------------- DOWN --------------------------------- */
     static char button_min, button_min_old=1;
 
     button_min_old=button_min;
     button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
 
-                    if (((button_min_old!=button_min)&&(button_min==0))) {
+    if (((button_min_old!=button_min)&&(button_min==0))) {
 
-                        second_systick_ms=0;
-                        button_second=0;
-                        
-                        if (button_second<2) {
-                            if (settings_set_time) {
-															button_down_press();
-														}
-                        }
-                    }
-		
-	//------------------------- UP ---------------------------------
+        second_systick_ms=0;
+        button_second=0;
+
+        if (button_second<2) {
+            if (settings_set_time) {
+                button_down_press();
+            }
+        }
+    }
+
+    /* ------------------------- UP --------------------------------- */
     static char button_plus, button_plus_old=1;
 
     button_plus_old=button_plus;
     button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
 
+    if (((button_plus_old!=button_plus)&&(button_plus==0))) {
 
-                    if (((button_plus_old!=button_plus)&&(button_plus==0))) {
+        second_systick_ms=0;
+        button_second=0;
 
-                        second_systick_ms=0;
-                        button_second=0;
-                       
-                        if (button_second<2) {
-                            if (settings_set_time) {
-															button_up_press(); 
-														}
-                        }
-
-                    }
-			
+        if (button_second<2) {
+            if (settings_set_time) {
+                button_up_press();
+            }
+        }
+    }
 }
-
-
-enum {
-    hour,
-    min,
-    day,
-    month,
-
-} clock_set;
 
 void button_ok_press(void) {
     settings_set_time_reset=0;
@@ -556,42 +679,10 @@ void button_down_press(void) {
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
 }
 
-int main(void)
-{
-    NVIC_SetPriorityGrouping(0x3);
-
-    init_periph_clock();
-    init_sys_counter();
-    init_spi();
-    init_tft();
-    button_init();
-
-    one_wire_init(&one_wire, GPIOB,  GPIO_Pin_8);
-    if		(one_wire_reset(&one_wire)) {
-        err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
-        err_ds18b20=ds18x20_select(&ds18b20);
-        err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);
-        err_ds18b20=ds18x20_start_conversion(&ds18b20);
-    }
-
-    led_pwm_on();
-
-    init_gui();
-    //time_counter = 0;
-    anim_counter = system_counter_ticks();
-
-    RTC_Counter = RTC_GetCounter();
-    RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
-
-    clock_gui_toggle_time_sep();
-    clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
-    clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
-    clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
-    clock_gui_set_month(RTC_DateTime.RTC_Month-1);
-    clock_gui_set_monthday(RTC_DateTime.RTC_Date);
-
-    if (RTC_Init() == 1) {
-        // Если первая инициализация RTC устанавливаем начальную дату, например 22.09.2016 14:30:00
+void first_time_rtc_setup(void){
+	
+if (RTC_Init() == 1) {
+        /* Если первая инициализация RTC устанавливаем начальную дату, например 11.04.2022 14:30:00 */
         RTC_DateTime.RTC_Date = 11;
         RTC_DateTime.RTC_Month = 4;
         RTC_DateTime.RTC_Year = 2022;
@@ -601,95 +692,8 @@ int main(void)
         RTC_DateTime.RTC_Seconds = 00;
         RTC_DateTime.RTC_Wday=7;
 
-        //После инициализации требуется задержка. Без нее время не устанавливается.
+        /* После инициализации требуется задержка. Без нее время не устанавливается. */
         delay_ms(1500);
         RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
-    }
-
-    for(;;) {
-
-        read_button();
-        if (ds18x20_conversion_done(&ds18b20)) {
-            //err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20);
-
-            if (err_ds18b20==0) {
-                err_ds18b20=ds18x20_start_conversion(&ds18b20);
-            }
-            else 		if		(one_wire_reset(&one_wire)) {
-                err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
-                err_ds18b20=ds18x20_select(&ds18b20);
-                err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);
-                err_ds18b20=ds18x20_start_conversion(&ds18b20);
-            }
-        }
-
-        uint8_t set_temp_for_ds18b20=0;
-        //=============================================================================
-        if (ds18x20_conversion_done(&ds18b20)) {
-            err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20);
-
-            if (err_ds18b20==0) {
-                clock_gui_set_temp_ind(temp_ds18b20);
-                set_temp_for_ds18b20=1;
-
-                ds18b20_t= (float)temp_ds18b20/256.0;
-
-                //err_ds18b20=ds18x20_start_conversion(&ds18b20);
-            }
-            else 		if		(one_wire_reset(&one_wire)) {
-                err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
-                err_ds18b20=ds18x20_select(&ds18b20);
-                err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);
-                err_ds18b20=ds18x20_start_conversion(&ds18b20);
-            }
-        }
-
-        if (settings_set_time_reset>10) {
-            settings_set_time_reset=0;
-            settings_set_time=0;
-            clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
-            clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
-            clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
-            clock_gui_set_time_color(CLOCK_TIME_COLOR);
-        }
-
-        RTC_Counter = RTC_GetCounter();
-        RTC_DateTime_old=RTC_DateTime;
-        RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
-
-
-        if (RTC_DateTime_old.RTC_Seconds!=RTC_DateTime.RTC_Seconds) {
-            clock_gui_toggle_time_sep();
-        }
-
-        if (RTC_DateTime_old.RTC_Minutes!=RTC_DateTime.RTC_Minutes) {
-            clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
-        }
-
-        if (RTC_DateTime_old.RTC_Hours!=RTC_DateTime.RTC_Hours) {
-            clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
-
-            if ((RTC_DateTime.RTC_Hours>6)&&(RTC_DateTime.RTC_Hours<22)) {
-                if (led_pwm_get()<100)led_pwm_set(100);
-            }
-            else if (led_pwm_get()>30)led_pwm_set(30);
-
-        }
-
-        if (RTC_DateTime_old.RTC_Wday!=RTC_DateTime.RTC_Wday) {
-            clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
-        }
-
-        if (RTC_DateTime_old.RTC_Month!=RTC_DateTime.RTC_Month) {
-            clock_gui_set_month(RTC_DateTime.RTC_Month-1);
-        }
-        if (RTC_DateTime_old.RTC_Date!=RTC_DateTime.RTC_Date) {
-            clock_gui_set_monthday(RTC_DateTime.RTC_Date);
-        }
-
-        if(system_counter_diff(&anim_counter) >= system_counter_ticks_per_sec() / 35) {
-            anim_counter = system_counter_ticks();
-            gui_iter();
-        }
     }
 }
