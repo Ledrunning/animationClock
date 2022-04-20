@@ -133,37 +133,5 @@ uint32_t RTC_GetRTC_Counter(RTC_DateTimeTypeDef* RTC_DateTimeStruct) {
  
     return JDN;
 }
- 
-//void RTC_GetMyFormat(RTC_DateTimeTypeDef* RTC_DateTimeStruct, char * buffer) {
-//    const char WDAY0[] = "Monday";
-//    const char WDAY1[] = "Tuesday";
-//    const char WDAY2[] = "Wednesday";
-//    const char WDAY3[] = "Thursday";
-//    const char WDAY4[] = "Friday";
-//    const char WDAY5[] = "Saturday";
-//    const char WDAY6[] = "Sunday";
-////    const char * WDAY[7]={WDAY0, WDAY1, WDAY2, WDAY3, WDAY4, WDAY5, WDAY6};
-// 
-//    const char MONTH1[] = "January";
-//    const char MONTH2[] = "February";
-//    const char MONTH3[] = "March";
-//    const char MONTH4[] = "April";
-//    const char MONTH5[] = "May";
-//    const char MONTH6[] = "June";
-//    const char MONTH7[] = "July";
-//    const char MONTH8[] = "August";
-//    const char MONTH9[] = "September";
-//    const char MONTH10[] = "October";
-//    const char MONTH11[] = "November";
-//    const char MONTH12[] = "December";
-////    const char * MONTH[12]={MONTH1, MONTH2, MONTH3, MONTH4, MONTH5, MONTH6, MONTH7, MONTH8, MONTH9, MONTH10, MONTH11, MONTH12};
-// 
-////    sprintf(buffer, "%s %d %s %04d",
-////            WDAY[RTC_DateTimeStruct->RTC_Wday],
-////            RTC_DateTimeStruct->RTC_Date,
-////            MONTH[RTC_DateTimeStruct->RTC_Month -1],
-////            RTC_DateTimeStruct->RTC_Year);
-//}
-//========================================================================================
 
 

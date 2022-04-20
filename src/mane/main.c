@@ -104,7 +104,7 @@ void button_ok_press(void);
 void button_up_press(void);
 void button_down_press(void);
 
-volatile uint16_t ms_systic_second;
+volatile uint16_t second_systick_ms;
 volatile uint8_t button_second;
 
 uint32_t RTC_Counter = 0;
@@ -127,14 +127,17 @@ volatile uint8_t switch_h_p=1, switch_h_p_old;
 
 
 void SysTick_Handler(void)
-{   
-	  static uint16_t ms, s;
+{
+    static uint16_t ms, s;
+		static uint16_t button_ms;
 
     system_counter_tick();
 
-    if (ms_systic_second<1000)ms_systic_second++;
+    if (second_systick_ms<1000) {
+			second_systick_ms++;
+		}
     else 	{
-        ms_systic_second=0;
+        second_systick_ms=0;
         button_second++;
     }
 
@@ -145,8 +148,8 @@ void SysTick_Handler(void)
             settings_set_time_reset++;
         }
     }
-		
-		//Тут читался датчик влажности
+
+    //Тут читался датчик влажности
     if (s<1000) s++;
     else {
         s=0;
@@ -247,13 +250,13 @@ static void init_spi(void)
  * GPIO_Mode_Out_OD — выход с открытым стоком (англ. Open Drain)
  * GPIO_Mode_Out_PP — выход двумя состояниями (англ. Push-Pull — туда-сюда)
  * GPIO_Mode_AF_OD — выход с открытым стоком для альтернативных функций (англ. Alternate Function).
- * Используется в случаях, когда выводом должна управлять периферия, 
+ * Используется в случаях, когда выводом должна управлять периферия,
  * прикрепленная к данному разряду порта (например, вывод Tx USART и т.п.)
  * GPIO_Mode_AF_PP — то же самое, но с двумя состояниями
  *---------------------------------------------------------------------------*/
-static void button_init(void){
-	
-	GPIO_InitTypeDef button_ok =
+static void button_init(void) {
+
+    GPIO_InitTypeDef button_ok =
     {.GPIO_Pin = GPIO_Pin_13, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
     GPIO_InitTypeDef button_down =
     {.GPIO_Pin = GPIO_Pin_14, .GPIO_Speed = GPIO_Speed_2MHz, .GPIO_Mode = GPIO_Mode_IPU};
@@ -264,7 +267,7 @@ static void button_init(void){
     GPIO_Init(GPIOB, &button_down);
     GPIO_Init(GPIOB, &button_ok);
 }
-	
+
 static void init_tft(void)
 {
     GPIO_InitTypeDef gpio_dc =
@@ -393,34 +396,24 @@ void led_pwm_on(void)
  *---------------------------------------------------------------------------*/
 volatile uint8_t count_press_button_ok=0;
 
+#define BTNOk_Pin 13
+#define BTNDown_Pin 14
+#define BTNUp_Pin 15
+
 void read_button(void) {
 
-    static uint8_t count_read_button_ok=0;
-    count_read_button_ok++;
-
-    //--------------------------------------------------------
+  //--------------------------- OK -----------------------------
     static char button, button_old=1;
-    //========================================================
+
     button_old=button;
-    button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-    if (((button_old!=button)&&(button==0))) {
-        delay_ms(5);
-        button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-        if (((button_old!=button)&&(button==0))) {
-            delay_ms(5);
-            button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-            if (((button_old!=button)&&(button==0))) {
-                delay_ms(5);
-                button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
-                if (((button_old!=button)&&(button==0))) {
-                    delay_ms(5);
+
                     button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+										
                     if (((button_old!=button)&&(button==0))) {
 
-                        ms_systic_second=0;
+                        second_systick_ms=0;
                         button_second=0;
-
-                        while   (((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13)==0)&&(button_second<2))	 );
+                        										
                         if (button_second<2) {
                             button_ok_press();
                         }
@@ -431,81 +424,46 @@ void read_button(void) {
                             RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
                         }
                     }
-                }
-            }
-        }
-    }
-
-//----------------------------------------------------------
+ //------------------------- DOWN ---------------------------------
     static char button_min, button_min_old=1;
-    //========================================================
+
     button_min_old=button_min;
     button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
-    if (	((button_min_old!=button_min)&&(button_min==0))) {
-        delay_ms(5);
-        button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
-        if ( ((button_min_old!=button_min)&&(button_min==0))) {
-            delay_ms(5);
-            button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
-            if ( ((button_min_old!=button_min)&&(button_min==0))) {
-                delay_ms(5);
-                button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
-                if ( ((button_min_old!=button_min)&&(button_min==0))) {
-                    delay_ms(5);
-                    button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
-                    if ( ((button_min_old!=button_min)&&(button_min==0))) {
 
-                        ms_systic_second=0;
+                    if (((button_min_old!=button_min)&&(button_min==0))) {
+
+                        second_systick_ms=0;
                         button_second=0;
-
-                        while   ( ((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14)==0)&&(button_second<2))	 ) 	;
+                        
                         if (button_second<2) {
-                            if (settings_set_time)button_down_press();
-                        }
-                        else {
-
+                            if (settings_set_time) {
+															button_down_press();
+														}
                         }
                     }
-                }
-            }
-        }
-    }
-//----------------------------------------------------------
-//----------------------------------------------------------
+		
+	//------------------------- UP ---------------------------------
     static char button_plus, button_plus_old=1;
-    //========================================================
+
     button_plus_old=button_plus;
     button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
-    if (	((button_plus_old!=button_plus)&&(button_plus==0))) {
-        delay_ms(5);
-        button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
-        if ( ((button_plus_old!=button_plus)&&(button_plus==0))) {
-            delay_ms(5);
-            button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
-            if ( ((button_plus_old!=button_plus)&&(button_plus==0))) {
-                delay_ms(5);
-                button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
-                if ( ((button_plus_old!=button_plus)&&(button_plus==0))) {
-                    delay_ms(5);
-                    button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
-                    if ( ((button_plus_old!=button_plus)&&(button_plus==0))) {
 
-                        ms_systic_second=0;
+
+                    if (((button_plus_old!=button_plus)&&(button_plus==0))) {
+
+                        second_systick_ms=0;
                         button_second=0;
-
-                        while   ( ((GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15)==0)&&(button_second<2))	 ) 	;
+                       
                         if (button_second<2) {
-                            if (settings_set_time)button_up_press();
+                            if (settings_set_time) {
+															button_up_press(); 
+														}
                         }
-                        else {
 
-                        }
                     }
-                }
-            }
-        }
-    }
+			
 }
+
 
 enum {
     hour,
@@ -567,7 +525,7 @@ void button_up_press(void) {
         else RTC_DateTime.RTC_Date=0;
         break;
     }
-		
+
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
 }
 
@@ -594,7 +552,7 @@ void button_down_press(void) {
         else RTC_DateTime.RTC_Date=31;
         break;
     }
-		
+
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
 }
 
@@ -607,7 +565,7 @@ int main(void)
     init_spi();
     init_tft();
     button_init();
-	  
+
     one_wire_init(&one_wire, GPIOB,  GPIO_Pin_8);
     if		(one_wire_reset(&one_wire)) {
         err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
@@ -649,9 +607,8 @@ int main(void)
     }
 
     for(;;) {
+
         read_button();
-
-
         if (ds18x20_conversion_done(&ds18b20)) {
             //err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20);
 
