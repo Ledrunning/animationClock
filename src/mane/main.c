@@ -133,13 +133,19 @@ void button_ok_press(void);
 void button_up_press(void);
 void button_down_press(void);
 void first_time_rtc_setup(void);
+bool spi_callback(void);
+void init_sys_counter(void);
+void init_periph_clock(void);
+void init_spi(void);
+void init_tft(void);
+void init_gui(void);
+void gui_iter(void);
+void led_pwm_set(uint8_t procent);
+uint8_t led_pwm_get(void);
+void led_pwm_on(void);
 
-/*
- * Обработчики прерываний.
- */
-
-
-void SysTick_Handler(void)
+/* Обработчики прерываний. */
+ void SysTick_Handler(void)
 {
     static uint16_t ms, s;
     static uint16_t button_ms;
@@ -184,198 +190,6 @@ void DMA1_Channel3_IRQHandler(void)
     spi_bus_dma_tx_channel_irq_handler(&spi);
 }
 
-bool spi_callback(void)
-{
-    return tft9341_spi_callback(&tft);
-}
-
-
-static void init_sys_counter(void)
-{
-    system_counter_init(1000);
-    counter = system_counter_ticks();
-    SysTick_Config(SystemCoreClock / 1000);
-}
-
-static void init_periph_clock(void)
-{
-    /* AFIO. */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-    /* USART. */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-    /* DMA. */
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-    /* SPI. */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
-}
-
-static void init_spi(void)
-{
-    GPIO_InitTypeDef gpio_sck_mosi =
-    {.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_7, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_AF_PP};
-    GPIO_InitTypeDef gpio_miso =
-    {.GPIO_Pin = GPIO_Pin_6, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_IN_FLOATING};
-
-    GPIO_Init(GPIOA, &gpio_sck_mosi);
-    GPIO_Init(GPIOA, &gpio_miso);
-
-    SPI_InitTypeDef spi_is;
-    SPI_StructInit(&spi_is);
-
-    spi_is.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
-    spi_is.SPI_CPHA = SPI_CPHA_1Edge;
-    spi_is.SPI_CPOL = SPI_CPOL_Low;
-    spi_is.SPI_CRCPolynomial = 0;
-    spi_is.SPI_DataSize = SPI_DataSize_8b;
-    spi_is.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-    spi_is.SPI_FirstBit = SPI_FirstBit_MSB;
-    spi_is.SPI_Mode = SPI_Mode_Master;
-    spi_is.SPI_NSS = SPI_NSS_Soft;
-
-    SPI_Init(SPI1, &spi_is);
-    SPI_Cmd(SPI1, ENABLE);
-
-    spi_bus_init_t spi_bus_is;
-    spi_bus_is.spi_device = SPI1;
-    spi_bus_is.dma_rx_channel = DMA1_Channel2;
-    spi_bus_is.dma_tx_channel = DMA1_Channel3;
-    spi_bus_init(&spi, &spi_bus_is);
-
-    spi_bus_set_callback(&spi, spi_callback);
-
-    NVIC_SetPriority(SPI1_IRQn, 3);
-    NVIC_EnableIRQ(SPI1_IRQn);
-
-    NVIC_SetPriority(DMA1_Channel2_IRQn, 4);
-    NVIC_SetPriority(DMA1_Channel3_IRQn, 4);
-    NVIC_EnableIRQ(DMA1_Channel2_IRQn);
-    NVIC_EnableIRQ(DMA1_Channel3_IRQn);
-}
-
-static void init_tft(void)
-{
-    GPIO_InitTypeDef gpio_dc =
-    {.GPIO_Pin = GPIO_Pin_12, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
-    GPIO_InitTypeDef gpio_ce =
-    {.GPIO_Pin = GPIO_Pin_11, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
-    GPIO_InitTypeDef gpio_rst =
-    {.GPIO_Pin = GPIO_Pin_10, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
-
-    GPIO_Init(GPIOB, &gpio_dc);
-    GPIO_Init(GPIOB, &gpio_ce);
-    GPIO_Init(GPIOB, &gpio_rst);
-
-    tft9341_init_t tft_init;
-
-    tft_init.ce_gpio = GPIOB;
-    tft_init.ce_pin = GPIO_Pin_11;
-    tft_init.dc_gpio = GPIOB;
-    tft_init.dc_pin = GPIO_Pin_12;
-    tft_init.reset_gpio = GPIOB;
-    tft_init.reset_pin = GPIO_Pin_10;
-    tft_init.spi = &spi;
-    tft_init.transfer_id = TFT9341_DEFAULT_TRANSFER_ID;
-
-    tft9341_init(&tft, &tft_init);
-
-    tft9341_reset(&tft);
-
-    tft9341_madctl_t madctl;
-    madctl.row_address_order = TFT9341_ROW_TOP_TO_BOTTOM;//TFT9341_ROW_BOTTOM_TO_TOP;
-    madctl.col_address_order = TFT9341_COL_LEFT_TO_RIGHT;//TFT9341_COL_RIGHT_TO_LEFT;
-    madctl.row_col_exchange = TFT9341_ROW_COL_REVERSE_MODE;
-    madctl.vertical_refresh = TFT9341_REFRESH_TOP_TO_BOTTOM;
-    madctl.color_order = TFT9341_COLOR_ORDER_BGR;
-    madctl.horizontal_refresh = TFT9341_REFRESH_LEFT_TO_RIGHT;
-
-    tft9341_set_madctl(&tft, &madctl);
-    tft9341_set_pixel_format(&tft, TFT9341_PIXEL_16BIT, TFT9341_PIXEL_16BIT);
-    tft9341_sleep_out(&tft);
-    tft9341_display_on(&tft);
-}
-
-static void init_gui(void)
-{
-    clock_gui_init(&gui);
-    clock_gui_set_back_color(CLOCK_BACK_COLOR);
-    clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
-    clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
-    clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
-    clock_gui_set_time_color(CLOCK_TIME_COLOR);
-    clock_gui_set_temp_ind_color(CLOCK_TEMP_IND_COLOR);
-    clock_gui_set_temp_outd_color(CLOCK_TEMP_OUTD_COLOR);
-    clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
-}
-
-static void gui_iter(void)
-{
-    clock_gui_animation_step();
-}
-
-
-void led_pwm_set(uint8_t procent)
-{
-    TIM1->CCR1 = (procent *	TIM1->ARR)/100 ;
-}
-
-uint8_t led_pwm_get(void)
-{
-    uint8_t procent=(TIM1->CCR1*100)/ TIM1->ARR;
-    return procent;
-}
-
-void led_pwm_on(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
-    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_8;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init( GPIOA, &GPIO_InitStructure);
-
-    TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-    TIM_OCInitTypeDef  TIM_OCInitStructure;
-    uint16_t TimerPeriod = 0;
-    uint16_t Channel1Pulse = 0;
-
-    /* Compute the value to be set in ARR regiter to generate signal frequency at 17.57 Khz */
-    TimerPeriod = (SystemCoreClock / 5000 ) - 1;
-    /* Compute CCR1 value to generate a duty cycle at 50% for channel 1 and 1N */
-    Channel1Pulse = (uint16_t) (((uint32_t) 5 * (TimerPeriod - 1)) / 10);
-
-    /* TIM1 clock enable */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
-
-    /* Time Base configuration */
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseStructure.TIM_Period = TimerPeriod;
-    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-    TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-
-    TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
-
-    /* Channel 1, 2,3 and 4 Configuration in PWM mode */
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
-    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;
-    TIM_OCInitStructure.TIM_Pulse = Channel1Pulse;
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
-    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
-    TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
-    TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCIdleState_Reset;
-
-    TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-
-    /* TIM1 counter enable */
-    TIM_Cmd(TIM1, ENABLE);
-
-    /* TIM1 Main Output Enable */
-    TIM_CtrlPWMOutputs(TIM1, ENABLE);
-}
 
 int main(void)
 {
@@ -418,6 +232,7 @@ int main(void)
 				uint8_t set_temp_for_ds18b20=0;
 			
         read_button();
+			
         if (ds18x20_conversion_done(&ds18b20)) {
             /* err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20); */
 
@@ -501,6 +316,8 @@ int main(void)
             anim_counter = system_counter_ticks();
             gui_iter();
         }
+				
+				//clock_gui_set_temp_outd(22); // сюда лепим значения слева, например от DHT11
     }
 }
 
@@ -696,4 +513,195 @@ if (RTC_Init() == 1) {
         delay_ms(1500);
         RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
     }
+}
+
+bool spi_callback(void)
+{
+    return tft9341_spi_callback(&tft);
+}
+
+static void init_sys_counter(void)
+{
+    system_counter_init(1000);
+    counter = system_counter_ticks();
+    SysTick_Config(SystemCoreClock / 1000);
+}
+
+static void init_periph_clock(void)
+{
+    /* AFIO. */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+    /* USART. */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    /* DMA. */
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+    /* SPI. */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
+}
+
+static void init_spi(void)
+{
+    GPIO_InitTypeDef gpio_sck_mosi =
+    {.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_7, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_AF_PP};
+    GPIO_InitTypeDef gpio_miso =
+    {.GPIO_Pin = GPIO_Pin_6, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_IN_FLOATING};
+
+    GPIO_Init(GPIOA, &gpio_sck_mosi);
+    GPIO_Init(GPIOA, &gpio_miso);
+
+    SPI_InitTypeDef spi_is;
+    SPI_StructInit(&spi_is);
+
+    spi_is.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+    spi_is.SPI_CPHA = SPI_CPHA_1Edge;
+    spi_is.SPI_CPOL = SPI_CPOL_Low;
+    spi_is.SPI_CRCPolynomial = 0;
+    spi_is.SPI_DataSize = SPI_DataSize_8b;
+    spi_is.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+    spi_is.SPI_FirstBit = SPI_FirstBit_MSB;
+    spi_is.SPI_Mode = SPI_Mode_Master;
+    spi_is.SPI_NSS = SPI_NSS_Soft;
+
+    SPI_Init(SPI1, &spi_is);
+    SPI_Cmd(SPI1, ENABLE);
+
+    spi_bus_init_t spi_bus_is;
+    spi_bus_is.spi_device = SPI1;
+    spi_bus_is.dma_rx_channel = DMA1_Channel2;
+    spi_bus_is.dma_tx_channel = DMA1_Channel3;
+    spi_bus_init(&spi, &spi_bus_is);
+
+    spi_bus_set_callback(&spi, spi_callback);
+
+    NVIC_SetPriority(SPI1_IRQn, 3);
+    NVIC_EnableIRQ(SPI1_IRQn);
+
+    NVIC_SetPriority(DMA1_Channel2_IRQn, 4);
+    NVIC_SetPriority(DMA1_Channel3_IRQn, 4);
+    NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+    NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+}
+
+static void init_tft(void)
+{
+    GPIO_InitTypeDef gpio_dc =
+    {.GPIO_Pin = GPIO_Pin_12, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
+    GPIO_InitTypeDef gpio_ce =
+    {.GPIO_Pin = GPIO_Pin_11, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
+    GPIO_InitTypeDef gpio_rst =
+    {.GPIO_Pin = GPIO_Pin_10, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
+
+    GPIO_Init(GPIOB, &gpio_dc);
+    GPIO_Init(GPIOB, &gpio_ce);
+    GPIO_Init(GPIOB, &gpio_rst);
+
+    tft9341_init_t tft_init;
+
+    tft_init.ce_gpio = GPIOB;
+    tft_init.ce_pin = GPIO_Pin_11;
+    tft_init.dc_gpio = GPIOB;
+    tft_init.dc_pin = GPIO_Pin_12;
+    tft_init.reset_gpio = GPIOB;
+    tft_init.reset_pin = GPIO_Pin_10;
+    tft_init.spi = &spi;
+    tft_init.transfer_id = TFT9341_DEFAULT_TRANSFER_ID;
+
+    tft9341_init(&tft, &tft_init);
+
+    tft9341_reset(&tft);
+
+    tft9341_madctl_t madctl;
+    madctl.row_address_order = TFT9341_ROW_TOP_TO_BOTTOM;//TFT9341_ROW_BOTTOM_TO_TOP;
+    madctl.col_address_order = TFT9341_COL_LEFT_TO_RIGHT;//TFT9341_COL_RIGHT_TO_LEFT;
+    madctl.row_col_exchange = TFT9341_ROW_COL_REVERSE_MODE;
+    madctl.vertical_refresh = TFT9341_REFRESH_TOP_TO_BOTTOM;
+    madctl.color_order = TFT9341_COLOR_ORDER_BGR;
+    madctl.horizontal_refresh = TFT9341_REFRESH_LEFT_TO_RIGHT;
+
+    tft9341_set_madctl(&tft, &madctl);
+    tft9341_set_pixel_format(&tft, TFT9341_PIXEL_16BIT, TFT9341_PIXEL_16BIT);
+    tft9341_sleep_out(&tft);
+    tft9341_display_on(&tft);
+}
+
+static void init_gui(void)
+{
+    clock_gui_init(&gui);
+    clock_gui_set_back_color(CLOCK_BACK_COLOR);
+    clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
+    clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
+    clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
+    clock_gui_set_time_color(CLOCK_TIME_COLOR);
+    clock_gui_set_temp_ind_color(CLOCK_TEMP_IND_COLOR);
+    clock_gui_set_temp_outd_color(CLOCK_TEMP_OUTD_COLOR);
+    clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
+}
+
+static void gui_iter(void)
+{
+    clock_gui_animation_step();
+}
+
+void led_pwm_set(uint8_t procent)
+{
+    TIM1->CCR1 = (procent *	TIM1->ARR)/100 ;
+}
+
+uint8_t led_pwm_get(void)
+{
+    uint8_t procent=(TIM1->CCR1*100)/ TIM1->ARR;
+    return procent;
+}
+
+void led_pwm_on(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_8;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init( GPIOA, &GPIO_InitStructure);
+
+    TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+    uint16_t TimerPeriod = 0;
+    uint16_t Channel1Pulse = 0;
+
+    /* Compute the value to be set in ARR regiter to generate signal frequency at 17.57 Khz */
+    TimerPeriod = (SystemCoreClock / 5000 ) - 1;
+    /* Compute CCR1 value to generate a duty cycle at 50% for channel 1 and 1N */
+    Channel1Pulse = (uint16_t) (((uint32_t) 5 * (TimerPeriod - 1)) / 10);
+
+    /* TIM1 clock enable */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+
+    /* Time Base configuration */
+    TIM_TimeBaseStructure.TIM_Prescaler = 0;
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+    TIM_TimeBaseStructure.TIM_Period = TimerPeriod;
+    TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+    TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
+
+    TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
+
+    /* Channel 1, 2,3 and 4 Configuration in PWM mode */
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM2;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Enable;
+    TIM_OCInitStructure.TIM_Pulse = Channel1Pulse;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_Low;
+    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
+    TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
+    TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCIdleState_Reset;
+
+    TIM_OC1Init(TIM1, &TIM_OCInitStructure);
+
+    /* TIM1 counter enable */
+    TIM_Cmd(TIM1, ENABLE);
+
+    /* TIM1 Main Output Enable */
+    TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }
