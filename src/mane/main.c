@@ -22,6 +22,9 @@
 #include "ds18x20.h"
 #include "one_wire.h"
 
+#define TRUE 1
+#define FALSE 0
+
 #define TFT_PIXEL_SIZE 2
 #define TFT_WIDTH 320
 #define TFT_HEIGHT 240
@@ -144,18 +147,25 @@ void led_pwm_set(uint8_t procent);
 uint8_t led_pwm_get(void);
 void led_pwm_on(void);
 
+volatile uint8_t flag;
+
 /* Обработчики прерываний. */
- void SysTick_Handler(void)
+void SysTick_Handler(void)
 {
     static uint16_t ms, s;
     static uint16_t button_ms;
 
     system_counter_tick();
 
+    if (++button_ms >=20) {
+        button_ms=0;
+        flag = TRUE;
+    }
+
     if (second_systick_ms<1000) {
         second_systick_ms++;
     }
-    else 	{
+    else {
         second_systick_ms=0;
         button_second++;
     }
@@ -169,30 +179,27 @@ void led_pwm_on(void);
     }
 
     /* Тут читался датчик влажности */
-    if (s<1000) s++;
+    if (s<1000) {
+        s++;
+    }
     else {
         s=0;
     }
 }
 
-void SPI1_IRQHandler(void)
-{
+void SPI1_IRQHandler(void) {
     spi_bus_irq_handler(&spi);
 }
 
-void DMA1_Channel2_IRQHandler(void)
-{
+void DMA1_Channel2_IRQHandler(void) {
     spi_bus_dma_rx_channel_irq_handler(&spi);
 }
 
-void DMA1_Channel3_IRQHandler(void)
-{
+void DMA1_Channel3_IRQHandler(void) {
     spi_bus_dma_tx_channel_irq_handler(&spi);
 }
 
-
-int main(void)
-{
+int main(void) {
     NVIC_SetPriorityGrouping(0x3);
 
     init_periph_clock();
@@ -229,17 +236,17 @@ int main(void)
 
     for(;;) {
 
-				uint8_t set_temp_for_ds18b20=0;
-			
+        uint8_t set_temp_for_ds18b20=0;
+
         read_button();
-			
+
         if (ds18x20_conversion_done(&ds18b20)) {
             /* err_ds18b20=ds18x20_read_temp(&ds18b20, &temp_ds18b20); */
 
             if (err_ds18b20==0) {
                 err_ds18b20=ds18x20_start_conversion(&ds18b20);
             }
-            else 		if		(one_wire_reset(&one_wire)) {
+            else if	(one_wire_reset(&one_wire)) {
                 err_ds18b20=ds18x20_init(&ds18b20, &one_wire, NULL);
                 err_ds18b20=ds18x20_select(&ds18b20);
                 err_ds18b20=ds18x20_configure(&ds18b20, DS18X20_RESOLUTION_MAX, 0, 0);
@@ -289,16 +296,16 @@ int main(void)
 
         if (RTC_DateTime_old.RTC_Hours!=RTC_DateTime.RTC_Hours) {
             clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
-						
-					/* Полная яркость дисплея в дневное время суток */
+
+            /* Полная яркость дисплея в дневное время суток */
             if ((RTC_DateTime.RTC_Hours>6)&&(RTC_DateTime.RTC_Hours<22)) {
                 if (led_pwm_get()<100) {
-									led_pwm_set(100);
-								}
+                    led_pwm_set(100);
+                }
             }
             else if (led_pwm_get()>30) {
-							led_pwm_set(30);
-						}
+                led_pwm_set(30);
+            }
         }
 
         if (RTC_DateTime_old.RTC_Wday!=RTC_DateTime.RTC_Wday) {
@@ -316,8 +323,8 @@ int main(void)
             anim_counter = system_counter_ticks();
             gui_iter();
         }
-				
-				//clock_gui_set_temp_outd(22); // сюда лепим значения слева, например от DHT11
+
+        //clock_gui_set_temp_outd(22); // сюда лепим значения слева, например от DHT11
     }
 }
 
@@ -354,62 +361,67 @@ static void button_init(void) {
 void read_button(void) {
 
     /* --------------------------- OK ----------------------------- */
-    static char button, button_old=1;
+    static uint8_t button, button_old=1;
 
-    button_old=button;
+    if(flag == TRUE) {
+        button_old=button;
 
-    button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
+        button=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13);
 
-    if (((button_old!=button)&&(button==0))) {
+        if (((button_old!=button)&&(button==0))) {
 
-        second_systick_ms=0;
-        button_second=0;
+            second_systick_ms=0;
+            button_second=0;
 
-        if (button_second<2) {
-            button_ok_press();
-        }
-        else {
-            RTC_Counter = RTC_GetCounter();
-            RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
-            RTC_DateTime.RTC_Seconds=0;
-            RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
-        }
-    }
-		
-	 /* ------------------------- DOWN --------------------------------- */
-    static char button_min, button_min_old=1;
-
-    button_min_old=button_min;
-    button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
-
-    if (((button_min_old!=button_min)&&(button_min==0))) {
-
-        second_systick_ms=0;
-        button_second=0;
-
-        if (button_second<2) {
-            if (settings_set_time) {
-                button_down_press();
+            if (button_second<2) {
+                button_ok_press();
+            }
+            else {
+                RTC_Counter = RTC_GetCounter();
+                RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+                RTC_DateTime.RTC_Seconds=0;
+                RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
             }
         }
-    }
 
-    /* ------------------------- UP --------------------------------- */
-    static char button_plus, button_plus_old=1;
+        /* ------------------------- DOWN --------------------------------- */
+        static uint8_t button_min, button_min_old=1;
 
-    button_plus_old=button_plus;
-    button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+        button_min_old=button_min;
+        button_min=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);
 
-    if (((button_plus_old!=button_plus)&&(button_plus==0))) {
+        if (((button_min_old!=button_min)&&(button_min==0))) {
 
-        second_systick_ms=0;
-        button_second=0;
+            second_systick_ms=0;
+            button_second=0;
 
-        if (button_second<2) {
-            if (settings_set_time) {
-                button_up_press();
+            if (button_second<2) {
+                if (settings_set_time) {
+                    button_down_press();
+                }
             }
         }
+
+        /* ------------------------- UP --------------------------------- */
+        static uint8_t button_plus, button_plus_old=1;
+
+        button_plus_old=button_plus;
+
+        button_plus=GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+
+        if (((button_plus_old!=button_plus)&&(button_plus==0))) {
+
+            second_systick_ms=0;
+            button_second=0;
+
+            if (button_second<2) {
+                if (settings_set_time) {
+                    button_up_press();
+                }
+            }
+        }
+
+        flag = FALSE;
     }
 }
 
@@ -496,9 +508,9 @@ void button_down_press(void) {
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
 }
 
-void first_time_rtc_setup(void){
-	
-if (RTC_Init() == 1) {
+void first_time_rtc_setup(void) {
+
+    if (RTC_Init() == 1) {
         /* Если первая инициализация RTC устанавливаем начальную дату, например 11.04.2022 14:30:00 */
         RTC_DateTime.RTC_Date = 11;
         RTC_DateTime.RTC_Month = 4;
@@ -515,20 +527,17 @@ if (RTC_Init() == 1) {
     }
 }
 
-bool spi_callback(void)
-{
+bool spi_callback(void) {
     return tft9341_spi_callback(&tft);
 }
 
-static void init_sys_counter(void)
-{
+static void init_sys_counter(void) {
     system_counter_init(1000);
     counter = system_counter_ticks();
     SysTick_Config(SystemCoreClock / 1000);
 }
 
-static void init_periph_clock(void)
-{
+static void init_periph_clock(void) {
     /* AFIO. */
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
     /* USART. */
@@ -541,8 +550,7 @@ static void init_periph_clock(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 }
 
-static void init_spi(void)
-{
+static void init_spi(void) {
     GPIO_InitTypeDef gpio_sck_mosi =
     {.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_7, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_AF_PP};
     GPIO_InitTypeDef gpio_miso =
@@ -584,8 +592,7 @@ static void init_spi(void)
     NVIC_EnableIRQ(DMA1_Channel3_IRQn);
 }
 
-static void init_tft(void)
-{
+static void init_tft(void) {
     GPIO_InitTypeDef gpio_dc =
     {.GPIO_Pin = GPIO_Pin_12, .GPIO_Speed = GPIO_Speed_50MHz, .GPIO_Mode = GPIO_Mode_Out_PP};
     GPIO_InitTypeDef gpio_ce =
@@ -626,8 +633,7 @@ static void init_tft(void)
     tft9341_display_on(&tft);
 }
 
-static void init_gui(void)
-{
+static void init_gui(void) {
     clock_gui_init(&gui);
     clock_gui_set_back_color(CLOCK_BACK_COLOR);
     clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
@@ -639,24 +645,20 @@ static void init_gui(void)
     clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
 }
 
-static void gui_iter(void)
-{
+static void gui_iter(void) {
     clock_gui_animation_step();
 }
 
-void led_pwm_set(uint8_t procent)
-{
+void led_pwm_set(uint8_t procent) {
     TIM1->CCR1 = (procent *	TIM1->ARR)/100 ;
 }
 
-uint8_t led_pwm_get(void)
-{
+uint8_t led_pwm_get(void) {
     uint8_t procent=(TIM1->CCR1*100)/ TIM1->ARR;
     return procent;
 }
 
-void led_pwm_on(void)
-{
+void led_pwm_on(void) {
     GPIO_InitTypeDef GPIO_InitStructure;
 
     RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
