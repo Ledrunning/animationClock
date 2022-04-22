@@ -147,7 +147,7 @@ void led_pwm_set(uint8_t procent);
 uint8_t led_pwm_get(void);
 void led_pwm_on(void);
 
-volatile uint8_t flag;
+volatile uint8_t flag, out_temp_flag;
 
 /* Обработчики прерываний. */
 void SysTick_Handler(void)
@@ -179,11 +179,9 @@ void SysTick_Handler(void)
     }
 
     /* Тут читался датчик влажности */
-    if (s<1000) {
-        s++;
-    }
-    else {
-        s=0;
+    if (++s >=1000) {
+			  out_temp_flag = TRUE;
+				s=0;
     }
 }
 
@@ -323,8 +321,11 @@ int main(void) {
             anim_counter = system_counter_ticks();
             gui_iter();
         }
-
-        //clock_gui_set_temp_outd(22); // сюда лепим значения слева, например от DHT11
+				
+				if(out_temp_flag){
+					clock_gui_set_temp_outd(fixed16_make_from_fract((int)(550), 10));
+					out_temp_flag = FALSE;
+				}
     }
 }
 
