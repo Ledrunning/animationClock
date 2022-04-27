@@ -52,8 +52,8 @@
 #define CLOCK_MONTH_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
 #define CLOCK_WEEKDAY_COLOR MAKE_RGB565(0x00, 0xff, 0xff)
 #define CLOCK_TIME_COLOR MAKE_RGB565(0x00, 0xff, 0x00)
-#define CLOCK_TEMP_OUTD_COLOR MAKE_RGB565(0x00, 0x00, 0xff)
-#define CLOCK_TEMP_IND_COLOR MAKE_RGB565(0xff, 0x00, 0x00)
+#define CLOCK_YEAR_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
+#define CLOCK_TEMP_IND_COLOR MAKE_RGB565(0x00, 0x00, 0xff)
 
 static counter_t counter = 0;
 static counter_t time_counter = 0;
@@ -198,6 +198,7 @@ void DMA1_Channel3_IRQHandler(void) {
 }
 
 int main(void) {
+	
     NVIC_SetPriorityGrouping(0x3);
 
     init_periph_clock();
@@ -229,7 +230,8 @@ int main(void) {
     clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
     clock_gui_set_month(RTC_DateTime.RTC_Month-1);
     clock_gui_set_monthday(RTC_DateTime.RTC_Date);
-
+		clock_gui_set_year(RTC_DateTime.RTC_Year);
+		
     first_time_rtc_setup();
 
     for(;;) {
@@ -317,15 +319,14 @@ int main(void) {
             clock_gui_set_monthday(RTC_DateTime.RTC_Date);
         }
 
+				/*if(RTC_DateTime_old.RTC_Year!=RTC_DateTime.RTC_Year){
+					clock_gui_set_year(RTC_DateTime.RTC_Year);
+				}*/
+				
         if(system_counter_diff(&anim_counter) >= system_counter_ticks_per_sec() / 35) {
             anim_counter = system_counter_ticks();
             gui_iter();
         }
-				
-				if(out_temp_flag){
-					clock_gui_set_temp_outd(fixed16_make_from_fract((int)(550), 10));
-					out_temp_flag = FALSE;
-				}
     }
 }
 
@@ -636,14 +637,14 @@ static void init_tft(void) {
 
 static void init_gui(void) {
     clock_gui_init(&gui);
+	  
     clock_gui_set_back_color(CLOCK_BACK_COLOR);
     clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
     clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
     clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
     clock_gui_set_time_color(CLOCK_TIME_COLOR);
     clock_gui_set_temp_ind_color(CLOCK_TEMP_IND_COLOR);
-    clock_gui_set_temp_outd_color(CLOCK_TEMP_OUTD_COLOR);
-    clock_gui_set_weekday(RTC_DateTime.RTC_Wday);
+    clock_gui_set_year_color(CLOCK_YEAR_COLOR);
 }
 
 static void gui_iter(void) {

@@ -586,7 +586,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>fixet</GroupName>
+          <GroupName>fixed</GroupName>
           <Files>
             <File>
               <FileName>fixed.h</FileName>
@@ -901,12 +901,12 @@
             <File>
               <FileName>DHT11.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\DHT11.c</FilePath>
+              <FilePath>.\DHT11\DHT11.c</FilePath>
             </File>
             <File>
               <FileName>DHT11.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\DHT11.h</FilePath>
+              <FilePath>.\DHT11\DHT11.h</FilePath>
             </File>
           </Files>
         </Group>

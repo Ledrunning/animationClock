@@ -55,11 +55,10 @@ extern void clock_gui_set_temp_ind(fixed16_t temp);
 extern void clock_gui_set_p(fixed16_t temp);
 
 /**
- * Устанавливает значение температуры на улице.
- * @param temp Температура.
- * @return Код ошибки.
+ * Устанавливает год.
+ * @param year текущий год, берется из RTC.
  */
-extern void clock_gui_set_temp_outd(fixed16_t temp);
+extern void clock_gui_set_year(uint32_t year);
 
 /**
  * Меняет разделитель часов и минут.
@@ -110,16 +109,10 @@ extern void clock_gui_set_time_mins_color(graphics_color_t color);
 extern void clock_gui_set_temp_ind_color(graphics_color_t color);
 
 /**
- * Устанавливает цвет температуры на улице.
- * @param color Цвет температуры на улице.
+ * Устанавливает цвет параметра года.
+ * @param color Цвет шрифта года.
  */
-extern void clock_gui_set_temp_outd_color(graphics_color_t color);
-
-/**
- * Устанавливает цвет.
- * @param color Цвет.
- */
-//extern void clock_gui_set__color(graphics_color_t color);
+extern void clock_gui_set_year_color(graphics_color_t color);
 
 #endif	/* CLOCK_GUI_H */
 

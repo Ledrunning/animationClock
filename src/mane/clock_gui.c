@@ -173,13 +173,13 @@ static const uint8_t clock_gui_temp_dot_data[CLOCK_GUI_TEMP_DOT_WIDTH] = {
 };
 static const graphics_t clock_gui_temp_dot_bitmap = make_graphics(clock_gui_temp_dot_data, CLOCK_GUI_TEMP_DOT_WIDTH, CLOCK_GUI_ANIM_ITEMS_COUNT_HEIGHT, GRAPHICS_FORMAT_BW_1_V);
 
-
 // Знак температуры - минус.
 #define CLOCK_GUI_TEMP_SIGN_MINUS_WIDTH 3
 #define CLOCK_GUI_TEMP_SIGN_MINUS_ANIM_ITEMS_COUNT ((CLOCK_GUI_TEMP_SIGN_MINUS_WIDTH) * (CLOCK_GUI_ANIM_ITEMS_COUNT_HEIGHT))
 static const uint8_t clock_gui_temp_sign_minus_data[CLOCK_GUI_TEMP_SIGN_MINUS_WIDTH] = {
     0x8, 0x8, 0x8
 };
+
 static const graphics_t clock_gui_temp_sign_minus_bitmap = make_graphics(clock_gui_temp_sign_minus_data, CLOCK_GUI_TEMP_SIGN_MINUS_WIDTH, CLOCK_GUI_ANIM_ITEMS_COUNT_HEIGHT, GRAPHICS_FORMAT_BW_1_V);
 
 // Знак температуры - плюс (пробел).
@@ -189,18 +189,6 @@ static const uint8_t clock_gui_temp_sign_plus_data[CLOCK_GUI_TEMP_SIGN_PLUS_WIDT
     0x0, 0x0, 0x0
 };
 static const graphics_t clock_gui_temp_sign_plus_bitmap = make_graphics(clock_gui_temp_sign_plus_data, CLOCK_GUI_TEMP_SIGN_PLUS_WIDTH, CLOCK_GUI_ANIM_ITEMS_COUNT_HEIGHT, GRAPHICS_FORMAT_BW_1_V);
-
-
-// Знак градуса цельсия.
-/*#define CLOCK_GUI_CELSIUM_WIDTH 4
-#define CLOCK_GUI_CELSIUM_ANIM_ITEMS_COUNT ((CLOCK_GUI_CELSIUM_WIDTH) * (CLOCK_GUI_ANIM_ITEMS_COUNT_HEIGHT))
-static const uint8_t clock_gui_celsium_data[CLOCK_GUI_CELSIUM_WIDTH] = {
-    0x06, 0x09, 0x09, 0x06
-};
-static const graphics_t clock_gui_celsium_bitmap = make_graphics(clock_gui_clock_sep_data, CLOCK_GUI_CELSIUM_WIDTH, CLOCK_GUI_ANIM_ITEMS_COUNT_HEIGHT, GRAPHICS_FORMAT_BW_1_V);
-*/
-
-
 
 #define BITMAP_SIZE_BYTES(arg_width, arg_height) ((arg_width * arg_height + 7) / 8)
 #define ANIM_ITEMS_COUNT(arg_width, arg_height) ((arg_width * arg_height * 2) / 3)
@@ -261,6 +249,12 @@ DECLARE_ANIM_BITMAP_DATA_COUNT(outd_temp_ones, CLOCK_GUI_DIGIT_ANIM_ITEMS, CLOCK
 DECLARE_NOANIM_BITMAP_DATA(outd_temp_dot, CLOCK_GUI_TEMP_SEP_BITMAP_WIDTH, CLOCK_GUI_TEMP_SEP_BITMAP_HEIGHT, GRAPHICS_FORMAT_BW_1_V);
 DECLARE_ANIM_BITMAP_DATA_COUNT(outd_temp_frac, CLOCK_GUI_DIGIT_ANIM_ITEMS, CLOCK_GUI_TEMP_ITEM_BITMAP_WIDTH, CLOCK_GUI_TEMP_ITEM_BITMAP_HEIGHT, GRAPHICS_FORMAT_BW_1_V);
 
+typedef struct _YearGui{
+	  gui_anim_bitmap_t year_first_digit;
+    gui_anim_bitmap_t year_second_digit;
+	  gui_anim_bitmap_t year_third_digit;
+    gui_anim_bitmap_t year_fourth_digit;
+} year_gui_t;
 
 typedef struct _Date_Gui {
     gui_anim_bitmap_t monthday_tens;
@@ -289,10 +283,10 @@ typedef struct _Temp_Gui {
 } temp_gui_t;
 
 typedef struct _Clock_Gui {
+	  year_gui_t year;
     date_gui_t date;
     time_gui_t time;
     temp_gui_t ind_temp;
-    temp_gui_t outd_temp;
 } clock_gui_t;
 
 
@@ -304,7 +298,7 @@ static gui_widget_t date_month_widget;
 static gui_widget_t date_weekday_widget;
 static gui_widget_t time_widget;
 static gui_widget_t temp_ind_widget;
-static gui_widget_t temp_outd_widget;
+static gui_widget_t temp_year_widget;
 
 
 
@@ -425,8 +419,8 @@ static void clock_gui_init_time(gui_t* gui)
 
 #define TEMP_IND_LEFT 172//2
 #define TEMP_IND_TOP (CLOCK_TOP + CLOCK_DIGIT_HEIGHT + TEMP_SPACE_HEIGHT)
-#define TEMP_OUTD_LEFT 2//170
-#define TEMP_OUTD_TOP TEMP_IND_TOP
+#define YEAR_LEFT 2//170
+#define YEAR_TOP TEMP_IND_TOP
 
 #define CLOCK_TEMP_WIDGET_WIDTH (TEMP_IND_LEFT + TEMP_SIGN_WIDTH + TEMP_DIGIT_WIDTH * 2 + TEMP_DOT_WIDTH + TEMP_SPACE_WIDTH * 2 + TEMP_DOT_SPACE_WIDTH * 2 + TEMP_DIGIT_WIDTH)
 #define CLOCK_TEMP_WIDGET_HEIGHT TEMP_DIGIT_HEIGHT
@@ -449,22 +443,16 @@ static void clock_gui_init_temp_ind(gui_t* gui)
                                0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
 }
 
-static void clock_gui_init_temp_outd(gui_t* gui)
+void clock_gui_init_year(gui_t* gui)
 {
-    clock_gui_init_anim_bitmap(&clock_gui.outd_temp.temp_sign, gui, &temp_outd_widget, &outd_temp_sign_graphics, outd_temp_sign_items, CLOCK_GUI_TEMP_SIGN_ANIM_ITEMS,
-                               0, 0, TEMP_SIGN_WIDTH, TEMP_SIGN_HEIGHT);
-    clock_gui_init_anim_bitmap(&clock_gui.outd_temp.temp_tens, gui, &temp_outd_widget, &outd_temp_tens_graphics, outd_temp_tens_items, CLOCK_GUI_DIGIT_ANIM_ITEMS,
-                               TEMP_SIGN_WIDTH + TEMP_SPACE_WIDTH,
-                               0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
-    clock_gui_init_anim_bitmap(&clock_gui.outd_temp.temp_ones, gui, &temp_outd_widget, &outd_temp_ones_graphics, outd_temp_ones_items, CLOCK_GUI_DIGIT_ANIM_ITEMS,
-                               TEMP_SIGN_WIDTH + TEMP_DIGIT_WIDTH + TEMP_SPACE_WIDTH * 2,
-                               0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
-    clock_gui_init_anim_bitmap(&clock_gui.outd_temp.temp_dot, gui, &temp_outd_widget, &outd_temp_dot_graphics, NULL, 0,//outd_temp_dot_items,
-                               TEMP_SIGN_WIDTH + TEMP_DIGIT_WIDTH * 2 + TEMP_SPACE_WIDTH * 2 + TEMP_DOT_SPACE_WIDTH,
-                               0, TEMP_DOT_WIDTH, TEMP_DOT_HEIGHT);
-    clock_gui_init_anim_bitmap(&clock_gui.outd_temp.temp_fract, gui, &temp_outd_widget, &outd_temp_frac_graphics, outd_temp_frac_items, CLOCK_GUI_DIGIT_ANIM_ITEMS,
-                               TEMP_SIGN_WIDTH + TEMP_DIGIT_WIDTH * 2 + TEMP_DOT_WIDTH + TEMP_SPACE_WIDTH * 2 + TEMP_DOT_SPACE_WIDTH * 2,
-                               0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
+    clock_gui_init_anim_bitmap(&clock_gui.year.year_first_digit, gui, &temp_year_widget, &outd_temp_tens_graphics, outd_temp_tens_items, CLOCK_GUI_DIGIT_ANIM_ITEMS,
+                               0, 0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
+    clock_gui_init_anim_bitmap(&clock_gui.year.year_second_digit, gui, &temp_year_widget, &outd_temp_tens_graphics, outd_temp_ones_items, CLOCK_GUI_DIGIT_ANIM_ITEMS,
+                               TEMP_DIGIT_WIDTH + TEMP_SPACE_WIDTH, 0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
+    clock_gui_init_anim_bitmap(&clock_gui.year.year_third_digit, gui, &temp_year_widget, &outd_temp_tens_graphics, outd_temp_ones_items, CLOCK_GUI_DIGIT_ANIM_ITEMS,
+                               TEMP_DIGIT_WIDTH * 2 + TEMP_SPACE_WIDTH, 0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
+    clock_gui_init_anim_bitmap(&clock_gui.year.year_fourth_digit, gui, &temp_year_widget, &outd_temp_tens_graphics, outd_temp_frac_items, CLOCK_GUI_DIGIT_ANIM_ITEMS,
+                               TEMP_DIGIT_WIDTH * 3 + TEMP_SPACE_WIDTH, 0, TEMP_DIGIT_WIDTH, TEMP_DIGIT_HEIGHT);
 }
 
 err_t clock_gui_init(gui_t* gui)
@@ -500,15 +488,15 @@ err_t clock_gui_init(gui_t* gui)
     gui_widget_resize(&temp_ind_widget, CLOCK_TEMP_WIDGET_WIDTH, CLOCK_TEMP_WIDGET_HEIGHT);
     gui_widget_set_visible(&temp_ind_widget, true);
     
-    gui_widget_init_parent(&temp_outd_widget, gui, &root_widget);
-    gui_widget_move(&temp_outd_widget, TEMP_OUTD_LEFT, TEMP_OUTD_TOP);
-    gui_widget_resize(&temp_outd_widget, CLOCK_TEMP_WIDGET_WIDTH, CLOCK_TEMP_WIDGET_HEIGHT);
-    gui_widget_set_visible(&temp_outd_widget, true);
+    gui_widget_init_parent(&temp_year_widget, gui, &root_widget);
+    gui_widget_move(&temp_year_widget, YEAR_LEFT, YEAR_TOP);
+    gui_widget_resize(&temp_year_widget, CLOCK_TEMP_WIDGET_WIDTH, CLOCK_TEMP_WIDGET_HEIGHT);
+    gui_widget_set_visible(&temp_year_widget, true);
     
     clock_gui_init_date(gui);
     clock_gui_init_time(gui);
     clock_gui_init_temp_ind(gui);
-    clock_gui_init_temp_outd(gui);
+		clock_gui_init_year(gui);
     
     gui_set_root_widget(gui, &root_widget);
     gui_widget_set_visible(&root_widget, true);
@@ -625,44 +613,13 @@ void clock_gui_set_temp_impl(temp_gui_t* temp_gui, fixed16_t temp)
     clock_gui_start_animation(&temp_gui->temp_ones, &clock_gui_digits_bitmaps[temp_ones]);
     clock_gui_start_sep_animation(&temp_gui->temp_dot, &clock_gui_temp_dot_bitmap);
     clock_gui_start_animation(&temp_gui->temp_fract, &clock_gui_digits_bitmaps[temp_fract]);
-}
+} 
 
-void clock_gui_set_p_impl(temp_gui_t* temp_gui, fixed16_t temp)
-{
-    bool temp_neg = temp < 0;
-    
-    temp = fixed_abs(temp);
-    
-    uint32_t temp_int = fixed16_get_int(temp);
-    uint32_t temp_fract = fixed16_get_fract_by_denom(temp, 10);
-    
-    if(temp_int > 99) temp_int = 99;
-    
-    uint32_t temp_tens = temp_int / 10;
-    uint32_t temp_ones = temp_int % 10;
-    
-    clock_gui_start_sep_animation(&temp_gui->temp_sign,
-            temp_neg ? &clock_gui_temp_sign_minus_bitmap : &clock_gui_temp_sign_plus_bitmap);
-    clock_gui_start_animation(&temp_gui->temp_tens, &clock_gui_digits_bitmaps[temp_tens]);
-    clock_gui_start_animation(&temp_gui->temp_ones, &clock_gui_digits_bitmaps[temp_ones]);
-    clock_gui_start_sep_animation(&temp_gui->temp_dot, &clock_gui_clock_empty_sep_bitmap);
-    clock_gui_start_animation(&temp_gui->temp_fract, &clock_gui_digits_bitmaps[temp_fract]);
-}
-
-void clock_gui_set_p(fixed16_t temp)
-{
-    clock_gui_set_p_impl(&clock_gui.outd_temp, temp);
-}
 
 void clock_gui_set_temp_ind(fixed16_t temp)
 {
     clock_gui_set_temp_impl(&clock_gui.ind_temp, temp);
-}
-
-void clock_gui_set_temp_outd(fixed16_t temp)
-{
-    clock_gui_set_temp_impl(&clock_gui.outd_temp, temp);
-}
+} 
 
 void clock_gui_toggle_time_sep(void)
 {
@@ -695,7 +652,7 @@ bool clock_gui_animation_step(void)
     res &= clock_gui_animation_step_impl(&clock_gui.date.month_third);
     res &= clock_gui_animation_step_impl(&clock_gui.date.weekday_tens);
     res &= clock_gui_animation_step_impl(&clock_gui.date.weekday_ones);
-    
+	      
     res &= clock_gui_animation_step_impl(&clock_gui.time.hours_tens);
     res &= clock_gui_animation_step_impl(&clock_gui.time.hours_ones);
     res &= clock_gui_animation_step_impl(&clock_gui.time.hours_mins_sep);
@@ -708,12 +665,12 @@ bool clock_gui_animation_step(void)
     res &= clock_gui_animation_step_impl(&clock_gui.ind_temp.temp_dot);
     res &= clock_gui_animation_step_impl(&clock_gui.ind_temp.temp_fract);
     
-    res &= clock_gui_animation_step_impl(&clock_gui.outd_temp.temp_sign);
-    res &= clock_gui_animation_step_impl(&clock_gui.outd_temp.temp_tens);
-    res &= clock_gui_animation_step_impl(&clock_gui.outd_temp.temp_ones);
-    res &= clock_gui_animation_step_impl(&clock_gui.outd_temp.temp_dot);
-    res &= clock_gui_animation_step_impl(&clock_gui.outd_temp.temp_fract);
-    
+		/* Year */
+    res &= clock_gui_animation_step_impl(&clock_gui.year.year_first_digit);
+    res &= clock_gui_animation_step_impl(&clock_gui.year.year_second_digit);
+    res &= clock_gui_animation_step_impl(&clock_gui.year.year_third_digit);
+    res &= clock_gui_animation_step_impl(&clock_gui.year.year_fourth_digit);
+        
     return res;
 }
 
@@ -727,7 +684,7 @@ void clock_gui_set_back_color(graphics_color_t color)
     gui_widget_set_back_color(&date_weekday_widget, color);
     gui_widget_set_back_color(&time_widget, color);
     gui_widget_set_back_color(&temp_ind_widget, color);
-    gui_widget_set_back_color(&temp_outd_widget, color);
+    gui_widget_set_back_color(&temp_year_widget, color);
     
     gui_widget_set_back_color(GUI_WIDGET(&clock_gui.date.monthday_tens), color);
     gui_widget_set_back_color(GUI_WIDGET(&clock_gui.date.monthday_ones), color);
@@ -749,11 +706,10 @@ void clock_gui_set_back_color(graphics_color_t color)
     gui_widget_set_back_color(GUI_WIDGET(&clock_gui.ind_temp.temp_dot), color);
     gui_widget_set_back_color(GUI_WIDGET(&clock_gui.ind_temp.temp_fract), color);
     
-    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.outd_temp.temp_sign), color);
-    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.outd_temp.temp_tens), color);
-    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.outd_temp.temp_ones), color);
-    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.outd_temp.temp_dot), color);
-    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.outd_temp.temp_fract), color);
+    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.year.year_first_digit), color);
+    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.year.year_second_digit), color);
+    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.year.year_third_digit), color);
+    gui_widget_set_back_color(GUI_WIDGET(&clock_gui.year.year_fourth_digit), color);
     
     gui_widget_set_visible(&root_widget, true);
 }
@@ -835,15 +791,36 @@ void clock_gui_set_temp_ind_color(graphics_color_t color)
     gui_widget_set_visible(&temp_ind_widget, true);
 }
 
-void clock_gui_set_temp_outd_color(graphics_color_t color)
+void clock_gui_set_year_color(graphics_color_t color)
 {
-    gui_widget_set_visible(&temp_outd_widget, false);
+    gui_widget_set_visible(&temp_year_widget, false);
     
-    gui_anim_bitmap_set_front_color(&clock_gui.outd_temp.temp_sign, color);
-    gui_anim_bitmap_set_front_color(&clock_gui.outd_temp.temp_tens, color);
-    gui_anim_bitmap_set_front_color(&clock_gui.outd_temp.temp_ones, color);
-    gui_anim_bitmap_set_front_color(&clock_gui.outd_temp.temp_dot, color);
-    gui_anim_bitmap_set_front_color(&clock_gui.outd_temp.temp_fract, color);
+    gui_anim_bitmap_set_front_color(&clock_gui.year.year_first_digit, color);
+    gui_anim_bitmap_set_front_color(&clock_gui.year.year_second_digit, color);
+    gui_anim_bitmap_set_front_color(&clock_gui.year.year_third_digit, color);
+    gui_anim_bitmap_set_front_color(&clock_gui.year.year_fourth_digit, color);
+        
+    gui_widget_set_visible(&temp_year_widget, true);
+}
+
+/* взять из 4х значного числа по одной цифре */
+void clock_gui_set_year_impl(year_gui_t* year_gui, uint32_t year)
+{   
+    /* uint32_t temp_int = fixed16_make_from_int(year); */
     
-    gui_widget_set_visible(&temp_outd_widget, true);
+	  /* взять из 4х значного числа по одной цифре для каждого фрактала */	
+    uint8_t temp_first = year / 1000;
+    uint8_t temp_second = (year / 100) % 10;
+	  uint8_t temp_third = (year % 100) / 10;
+	  uint8_t temp_fourth = year % 10;
+	
+    clock_gui_start_animation(&year_gui->year_first_digit, &clock_gui_digits_bitmaps[1]);
+    clock_gui_start_animation(&year_gui->year_second_digit, &clock_gui_digits_bitmaps[2]);
+	  clock_gui_start_animation(&year_gui->year_third_digit, &clock_gui_digits_bitmaps[3]);
+    clock_gui_start_animation(&year_gui->year_fourth_digit, &clock_gui_digits_bitmaps[4]);
+}
+
+void clock_gui_set_year(uint32_t year)
+{   
+	 clock_gui_set_year_impl(&clock_gui.year, year);
 }
