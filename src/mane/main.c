@@ -206,6 +206,7 @@ int main(void) {
     init_spi();
     init_tft();
     button_init();
+	  first_time_rtc_setup();
 
     one_wire_init(&one_wire, GPIOB,  GPIO_Pin_8);
     if		(one_wire_reset(&one_wire)) {
@@ -223,7 +224,7 @@ int main(void) {
 
     RTC_Counter = RTC_GetCounter();
     RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
-
+	  		
     clock_gui_toggle_time_sep();
     clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
     clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
@@ -231,8 +232,6 @@ int main(void) {
     clock_gui_set_month(RTC_DateTime.RTC_Month-1);
     clock_gui_set_monthday(RTC_DateTime.RTC_Date);
 		clock_gui_set_year(RTC_DateTime.RTC_Year);
-		
-    first_time_rtc_setup();
 
     for(;;) {
 
