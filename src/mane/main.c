@@ -318,9 +318,9 @@ int main(void) {
             clock_gui_set_monthday(RTC_DateTime.RTC_Date);
         }
 
-				/*if(RTC_DateTime_old.RTC_Year!=RTC_DateTime.RTC_Year){
+				if(RTC_DateTime_old.RTC_Year!=RTC_DateTime.RTC_Year){
 					clock_gui_set_year(RTC_DateTime.RTC_Year);
-				}*/
+				}
 				
         if(system_counter_diff(&anim_counter) >= system_counter_ticks_per_sec() / 35) {
             anim_counter = system_counter_ticks();
