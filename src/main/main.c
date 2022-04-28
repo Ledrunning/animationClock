@@ -79,6 +79,14 @@
 #define DAYS_IN_MONTH 31
 #define MIN_YEAR 2006
 #define MAX_YEAR 2100
+#define RESET_COLOR_TIME_S 10
+
+#define MS_IN_SECOND 1000
+#define BUTTON_DEBOUNCE 20
+#define MIN_HOUR_PWM 6
+#define MAX_HOUR_PWM 22
+#define MAX_LIGHT_LEVEL 100
+#define MIN_LIGHT_LEVEL 30
 
 static counter_t counter = 0;
 static counter_t time_counter = 0;
@@ -182,12 +190,12 @@ void SysTick_Handler(void)
 
     system_counter_tick();
 
-    if (++button_ms >=20) {
+    if (++button_ms >=BUTTON_DEBOUNCE) {
         button_ms=0;
         flag = TRUE;
     }
 
-    if (second_systick_ms<1000) {
+    if (second_systick_ms<MS_IN_SECOND) {
         second_systick_ms++;
     }
     else {
@@ -196,7 +204,7 @@ void SysTick_Handler(void)
     }
 
     if (settings_set_time) {
-        if (ms<1000) ms++;
+        if (ms<MS_IN_SECOND) ms++;
         else {
             ms=0;
             settings_set_time_reset++;
@@ -204,7 +212,7 @@ void SysTick_Handler(void)
     }
 
     /* Тут читался датчик влажности */
-    if (++s >=1000) {
+    if (++s >=MS_IN_SECOND) {
 			  out_temp_flag = TRUE;
 				s=0;
     }
@@ -297,8 +305,8 @@ int main(void) {
             }
         }
 				
-				/* Сброс цвета из настроечного режима в режим отображения через временной интервал */
-        if (settings_set_time_reset>10) {
+				/* Сброс цвета из настроечного режима в режим отображения через временной интервал 10 сек */
+        if (settings_set_time_reset>RESET_COLOR_TIME_S) {
             settings_set_time_reset=0;
             settings_set_time=0;
             clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
@@ -323,14 +331,14 @@ int main(void) {
         if (RTC_DateTime_old.RTC_Hours!=RTC_DateTime.RTC_Hours) {
             clock_gui_set_time(RTC_DateTime.RTC_Hours, RTC_DateTime.RTC_Minutes);
 
-            /* Полная яркость дисплея в дневное время суток */
-            if ((RTC_DateTime.RTC_Hours>6)&&(RTC_DateTime.RTC_Hours<22)) {
-                if (led_pwm_get()<100) {
-                    led_pwm_set(100);
+					/* Полная яркость дисплея в дневное время суток c 6:00-22:00 */
+            if ((RTC_DateTime.RTC_Hours>MIN_HOUR_PWM)&&(RTC_DateTime.RTC_Hours<MAX_HOUR_PWM)) {
+                if (led_pwm_get()<MAX_LIGHT_LEVEL) {
+                    led_pwm_set(MAX_LIGHT_LEVEL);
                 }
             }
-            else if (led_pwm_get()>30) {
-                led_pwm_set(30);
+            else if (led_pwm_get()>MIN_LIGHT_LEVEL) {
+                led_pwm_set(MIN_LIGHT_LEVEL);
             }
         }
 
@@ -453,7 +461,7 @@ void read_button(void) {
     }
 }
 
-void button_ok_press(void) {
+ void button_ok_press(void) {
     settings_set_time_reset=0;
 
     if (settings_set_time==1) {
@@ -537,7 +545,6 @@ void button_up_press(void) {
 						
 						RTC_DateTime.RTC_Year++;
 					}
-					
 			  break;
     }
 
@@ -589,7 +596,6 @@ void button_down_press(void) {
 						
 						RTC_DateTime.RTC_Year--;
 					}
-					
 			  break;
     }
 
