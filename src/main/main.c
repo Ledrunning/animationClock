@@ -35,7 +35,12 @@
 #define TFT_CACHE_BUF0_SIZE (TFT_CACHE_BUF0_PIXELS * TFT_PIXEL_SIZE)
 #define TFT_CACHE_BUF1_SIZE (TFT_CACHE_BUF1_PIXELS * TFT_PIXEL_SIZE)
 
-// GUI.
+/* GUI. 
+ * BLACK_AND_WHITE = 1 данные будут отображаться в черно белом цвете 
+ * В противном случае - отображение цветное
+ */
+#define BLACK_AND_WHITE 0
+
 #define MAKE_RGB565(r, g, b) TFT9341_MAKE_RGB565(r, g, b)
 #define THEME_COLOR_BACK MAKE_RGB565(0xff, 0xff, 0xff)
 #define THEME_COLOR_FRONT MAKE_RGB565(0x00, 0x00, 0x00)
@@ -46,14 +51,34 @@
 #define THEME_COLOR_FOCUS MAKE_RGB565(0x00, 0x78, 0xd7)
 #define THEME_COLOR_PRESSED MAKE_RGB565(0xcd, 0xe3, 0xf8)
 
-#define CLOCK_SET_COLOR MAKE_RGB565(0xFF, 0x00, 0x00)
-#define CLOCK_BACK_COLOR MAKE_RGB565(0, 0, 0)
-#define CLOCK_MONTHDAY_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
-#define CLOCK_MONTH_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
-#define CLOCK_WEEKDAY_COLOR MAKE_RGB565(0x00, 0xff, 0xff)
-#define CLOCK_TIME_COLOR MAKE_RGB565(0x00, 0xff, 0x00)
-#define CLOCK_YEAR_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
-#define CLOCK_TEMP_IND_COLOR MAKE_RGB565(0x00, 0x00, 0xff)
+#if BLACK_AND_WHITE
+	#define CLOCK_SET_COLOR MAKE_RGB565(0x96, 0x96, 0x96)
+	#define CLOCK_BACK_COLOR MAKE_RGB565(0, 0, 0)
+	#define CLOCK_MONTHDAY_COLOR MAKE_RGB565(0xff, 0xff, 0xff)
+	#define CLOCK_MONTH_COLOR MAKE_RGB565(0xff, 0xff, 0xff)
+	#define CLOCK_WEEKDAY_COLOR MAKE_RGB565(0xff, 0xff, 0xff)
+	#define CLOCK_TIME_COLOR MAKE_RGB565(0xff, 0xff, 0xff)
+	#define CLOCK_YEAR_COLOR MAKE_RGB565(0xff, 0xff, 0xff)
+	#define CLOCK_TEMP_IND_COLOR MAKE_RGB565(0xff, 0xff, 0xff)
+	
+#else
+  #define CLOCK_SET_COLOR MAKE_RGB565(0xFF, 0x00, 0x00)
+	#define CLOCK_BACK_COLOR MAKE_RGB565(0, 0, 0)
+	#define CLOCK_MONTHDAY_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
+	#define CLOCK_MONTH_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
+	#define CLOCK_WEEKDAY_COLOR MAKE_RGB565(0x00, 0xff, 0xff)
+	#define CLOCK_TIME_COLOR MAKE_RGB565(0x00, 0xff, 0x00)
+	#define CLOCK_YEAR_COLOR MAKE_RGB565(0xff, 0xff, 0x00)
+	#define CLOCK_TEMP_IND_COLOR MAKE_RGB565(0x00, 0x00, 0xff)
+#endif
+
+/* Clock */
+#define HOURS_IN_DAY 23
+#define MINUTES_IN_HOUR 59
+#define MONTH_IN_YEAR 12
+#define DAYS_IN_MONTH 31
+#define MIN_YEAR 2006
+#define MAX_YEAR 2100
 
 static counter_t counter = 0;
 static counter_t time_counter = 0;
@@ -127,7 +152,7 @@ enum {
     min,
     day,
     month,
-
+	  year
 } clock_set;
 
 void button_init(void);
@@ -271,7 +296,8 @@ int main(void) {
                 err_ds18b20=ds18x20_start_conversion(&ds18b20);
             }
         }
-
+				
+				/* Сброс цвета из настроечного режима в режим отображения через временной интервал */
         if (settings_set_time_reset>10) {
             settings_set_time_reset=0;
             settings_set_time=0;
@@ -279,6 +305,7 @@ int main(void) {
             clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
             clock_gui_set_weekday_color(CLOCK_WEEKDAY_COLOR);
             clock_gui_set_time_color(CLOCK_TIME_COLOR);
+					  clock_gui_set_year_color(CLOCK_YEAR_COLOR);
         }
 
         RTC_Counter = RTC_GetCounter();
@@ -430,14 +457,20 @@ void button_ok_press(void) {
     settings_set_time_reset=0;
 
     if (settings_set_time==1) {
-        if (clock_set<month)clock_set++;
-        else clock_set=hour;
+        if (clock_set<year){
+					clock_set++;
+				}
+        else {
+					clock_set=hour;
+				}
     }
-    else settings_set_time=1;
+    else {
+			settings_set_time=1;
+		}
 
     switch (clock_set) {
     case hour:
-        clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
+        clock_gui_set_year_color(CLOCK_YEAR_COLOR);
         clock_gui_set_time_hour_color(CLOCK_SET_COLOR);
         break;
     case min:
@@ -452,6 +485,10 @@ void button_ok_press(void) {
         clock_gui_set_monthday_color(CLOCK_MONTHDAY_COLOR);
         clock_gui_set_month_color(CLOCK_SET_COLOR);
         break;
+		case year:
+			  clock_gui_set_month_color(CLOCK_MONTHDAY_COLOR);
+			  clock_gui_set_year_color(CLOCK_SET_COLOR);
+		    break;
     }
 }
 
@@ -460,23 +497,48 @@ void button_up_press(void) {
 
     RTC_Counter = RTC_GetCounter();
     RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+	
     switch (clock_set) {
     case hour:
-        if (RTC_DateTime.RTC_Hours <23)RTC_DateTime.RTC_Hours++;
-        else RTC_DateTime.RTC_Hours=0;
+        if (RTC_DateTime.RTC_Hours < HOURS_IN_DAY){
+					RTC_DateTime.RTC_Hours++;
+				}
+        else {
+					RTC_DateTime.RTC_Hours=0;
+				}
         break;
     case min:
-        if (RTC_DateTime.RTC_Minutes <59)RTC_DateTime.RTC_Minutes++;
-        else RTC_DateTime.RTC_Minutes=0;
+        if (RTC_DateTime.RTC_Minutes < MINUTES_IN_HOUR) {
+					RTC_DateTime.RTC_Minutes++;
+				}
+        else {
+					RTC_DateTime.RTC_Minutes=0;
+				}
         break;
     case month:
-        if (RTC_DateTime.RTC_Month <12)RTC_DateTime.RTC_Month++;
-        else RTC_DateTime.RTC_Month=1;
+        if (RTC_DateTime.RTC_Month < MONTH_IN_YEAR){
+					RTC_DateTime.RTC_Month++;
+				}
+        else {
+					RTC_DateTime.RTC_Month=1;
+				}
         break;
     case day:
-        if (RTC_DateTime.RTC_Date <31)RTC_DateTime.RTC_Date++;
-        else RTC_DateTime.RTC_Date=0;
+        if (RTC_DateTime.RTC_Date < DAYS_IN_MONTH){
+					RTC_DateTime.RTC_Date++;
+				}
+        else {
+					RTC_DateTime.RTC_Date=0;
+				}
         break;
+		case year:
+			  if (RTC_DateTime.RTC_Year >= MIN_YEAR 
+					&& RTC_DateTime.RTC_Year <= MAX_YEAR) {
+						
+						RTC_DateTime.RTC_Year++;
+					}
+					
+			  break;
     }
 
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));
@@ -487,23 +549,48 @@ void button_down_press(void) {
 
     RTC_Counter = RTC_GetCounter();
     RTC_GetDateTime(RTC_Counter, &RTC_DateTime);
+	
     switch (clock_set) {
     case hour:
-        if (RTC_DateTime.RTC_Hours >0)RTC_DateTime.RTC_Hours--;
-        else RTC_DateTime.RTC_Hours=23;
+        if (RTC_DateTime.RTC_Hours >0){
+					RTC_DateTime.RTC_Hours--;
+				}
+        else {
+					RTC_DateTime.RTC_Hours=HOURS_IN_DAY;
+				}
         break;
     case min:
-        if (RTC_DateTime.RTC_Minutes >0)RTC_DateTime.RTC_Minutes--;
-        else RTC_DateTime.RTC_Minutes=59;
+        if (RTC_DateTime.RTC_Minutes >0){
+					RTC_DateTime.RTC_Minutes--;
+				}
+        else {
+					RTC_DateTime.RTC_Minutes = MINUTES_IN_HOUR;
+				}
         break;
     case month:
-        if (RTC_DateTime.RTC_Month >0)RTC_DateTime.RTC_Month--;
-        else RTC_DateTime.RTC_Month=12;
+        if (RTC_DateTime.RTC_Month >0){
+					RTC_DateTime.RTC_Month--;
+				}
+        else {
+					RTC_DateTime.RTC_Month = MONTH_IN_YEAR;
+				}
         break;
     case day:
-        if (RTC_DateTime.RTC_Date >0)RTC_DateTime.RTC_Date--;
-        else RTC_DateTime.RTC_Date=31;
+        if (RTC_DateTime.RTC_Date >0){
+					RTC_DateTime.RTC_Date--;
+				}
+        else {
+					RTC_DateTime.RTC_Date = DAYS_IN_MONTH;
+				}
         break;
+		case year:
+			  if (RTC_DateTime.RTC_Year >= MIN_YEAR 
+					&& RTC_DateTime.RTC_Year <= MAX_YEAR) {
+						
+						RTC_DateTime.RTC_Year--;
+					}
+					
+			  break;
     }
 
     RTC_SetCounter(RTC_GetRTC_Counter(&RTC_DateTime));

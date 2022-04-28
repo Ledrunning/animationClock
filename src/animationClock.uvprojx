@@ -384,19 +384,24 @@
           <GroupName>main</GroupName>
           <Files>
             <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\mane\main.c</FilePath>
-            </File>
-            <File>
               <FileName>clock_gui.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\mane\clock_gui.c</FilePath>
+              <FilePath>.\main\clock_gui.c</FilePath>
             </File>
             <File>
               <FileName>clock_gui.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\mane\clock_gui.h</FilePath>
+              <FilePath>.\main\clock_gui.h</FilePath>
+            </File>
+            <File>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\main\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>font_droid_sans_mono_8x16_utf8.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\main\font_droid_sans_mono_8x16_utf8.h</FilePath>
             </File>
           </Files>
         </Group>
