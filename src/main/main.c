@@ -78,7 +78,7 @@
 #define MONTH_IN_YEAR 12
 #define DAYS_IN_MONTH 31
 #define MIN_YEAR 2006
-#define MAX_YEAR 2100
+#define MAX_YEAR 2099
 #define RESET_COLOR_TIME_S 10
 
 #define MS_IN_SECOND 1000
