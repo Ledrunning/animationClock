@@ -77,6 +77,8 @@
 #define MINUTES_IN_HOUR 59
 #define MONTH_IN_YEAR 12
 #define DAYS_IN_MONTH 31
+
+/* Календарь на 100 лет с 2000 до 2099 */
 #define MIN_YEAR 2006
 #define MAX_YEAR 2099
 #define RESET_COLOR_TIME_S 10
