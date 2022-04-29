@@ -541,7 +541,7 @@ void button_up_press(void) {
         break;
 		case year:
 			  if (RTC_DateTime.RTC_Year >= MIN_YEAR 
-					&& RTC_DateTime.RTC_Year <= MAX_YEAR) {
+					&& RTC_DateTime.RTC_Year < MAX_YEAR) {
 						
 						RTC_DateTime.RTC_Year++;
 					}
@@ -591,7 +591,7 @@ void button_down_press(void) {
 				}
         break;
 		case year:
-			  if (RTC_DateTime.RTC_Year >= MIN_YEAR 
+			  if (RTC_DateTime.RTC_Year > MIN_YEAR 
 					&& RTC_DateTime.RTC_Year <= MAX_YEAR) {
 						
 						RTC_DateTime.RTC_Year--;
