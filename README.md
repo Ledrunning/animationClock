@@ -19,3 +19,13 @@ TODO:
 - Humidity measurements
 - PWM for screen backlight
 - And USART data exchange for desktop application https://github.com/Ledrunning/TinnyMonitor
+
+Device view:  
+
+## Black & White
+
+![Screenshot](appearanceB_W.jpg)
+
+## Colored
+
+![Screenshot](appearance_colored.jpg)
