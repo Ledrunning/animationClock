@@ -9,7 +9,7 @@ Parts
 - ILI9341 without touch screen sensor
 - DS18B20
 
-Сircuit diagram located in ""hardware"" folder
+Сircuit diagram drawn via Dip Trace CAD and located in **hardware** folder
 
 Whats done:
 - Added year adjustment 
