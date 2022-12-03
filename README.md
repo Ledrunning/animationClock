@@ -17,6 +17,10 @@ Whats done:
 - Added Black and White theme
 - Code refactoring 
 
+For display theme setup you should find a row^
+```#define BLACK_AND_WHITE 0```
+If it's equal 0 you will have colored theme else if 1 black and white theme
+
 TODO:
 - Humidity measurements
 - PWM for screen backlight
