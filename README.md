@@ -17,7 +17,7 @@ Whats done:
 - Added Black and White theme
 - Code refactoring 
 
-For display theme setup you should find a row
+For display theme setup you should find a row:
 
 ```#define BLACK_AND_WHITE 0```
 
