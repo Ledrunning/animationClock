@@ -38,5 +38,4 @@ Device view:
 
 ![Screenshot](appearance_colored.jpg)
 
-Article in Russian: 
-[https://ledrunning.wordpress.com/](https://ledrunning.wordpress.com/2023/07/23/animationclock-stm32-tft/)https://ledrunning.wordpress.com/2023/07/23/animationclock-stm32-tft/
+[Article in Russian: ](https://ledrunning.wordpress.com/2023/07/23/animationclock-stm32-tft/)
